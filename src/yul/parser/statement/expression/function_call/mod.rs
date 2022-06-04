@@ -567,7 +567,7 @@ impl FunctionCall {
                     .original
                     .take()
                     .ok_or_else(|| anyhow::anyhow!("`dataoffset` object identifier is missing"))?;
-                compiler_llvm_context::create::contract_hash_size(context, identifier)
+                compiler_llvm_context::create::header_size(context, identifier)
             }
             Name::DataCopy => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;

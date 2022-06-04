@@ -144,14 +144,12 @@ where
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?,
             ),
-            InstructionName::PUSH_ContractHashSize => {
-                compiler_llvm_context::create::contract_hash_size(
-                    context,
-                    self.instruction
-                        .value
-                        .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?,
-                )
-            }
+            InstructionName::PUSH_ContractHashSize => compiler_llvm_context::create::header_size(
+                context,
+                self.instruction
+                    .value
+                    .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?,
+            ),
             InstructionName::PUSHLIB => {
                 let path = self
                     .instruction
