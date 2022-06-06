@@ -79,6 +79,11 @@ fn main_inner() -> anyhow::Result<()> {
     };
 
     let libraries = solc_input.settings.libraries.clone().unwrap_or_default();
+    let optimize = if arguments.standard_json {
+        solc_input.settings.optimizer.enabled
+    } else {
+        arguments.optimize
+    };
     let mut solc_output = solc.standard_json(
         solc_input,
         arguments.base_path,
@@ -110,7 +115,8 @@ fn main_inner() -> anyhow::Result<()> {
     let project =
         solc_output.try_into_project(libraries, pipeline, solc_version, dump_flags.as_slice())?;
     compiler_llvm_context::initialize_target();
-    let optimizer_settings = if arguments.optimize {
+
+    let optimizer_settings = if optimize {
         compiler_llvm_context::OptimizerSettings::new(
             inkwell::OptimizationLevel::Aggressive,
             inkwell::OptimizationLevel::Aggressive,
