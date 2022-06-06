@@ -127,7 +127,7 @@ source = "git+ssh://git@github.com/matter-labs/compiler-common?branch=az/vm-v1.1
 [[package]]
 name = "compiler-llvm-context"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az-cpr-651-implement-the-msgvalue-and#88341ffd82968f82e9d4bdc6a3bf6c30575d2d8b"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#52b08a079b4d7b2cb24ba7d7fb211bbad6521186"
 dependencies = [
  "anyhow",
  "compiler-common",
