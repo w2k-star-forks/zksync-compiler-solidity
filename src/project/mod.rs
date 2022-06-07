@@ -5,6 +5,7 @@
 pub mod contract;
 
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -177,6 +178,29 @@ impl Project {
             }
         }
         Ok(build)
+    }
+
+    ///
+    /// Parses the default Yul source code and returns the source data.
+    ///
+    pub fn try_from_default_yul(path: &Path, version: &semver::Version) -> anyhow::Result<Self> {
+        let yul = std::fs::read_to_string(path)
+            .map_err(|error| anyhow::anyhow!("Yul file {:?} reading error: {}", path, error))?;
+        let mut lexer = Lexer::new(yul.clone());
+        let path = "Default".to_owned();
+        let object = Object::parse(&mut lexer, None)
+            .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
+
+        let mut project_contracts = HashMap::with_capacity(1);
+        project_contracts.insert(
+            path.clone(),
+            Contract::new(path, Source::new_yul(yul, object)),
+        );
+        Ok(Self::new(
+            version.to_owned(),
+            project_contracts,
+            HashMap::new(),
+        ))
     }
 
     ///

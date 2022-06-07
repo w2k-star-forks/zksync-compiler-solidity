@@ -45,7 +45,7 @@ impl Output {
     ///
     /// Converts the `solc` JSON output into a convenient project representation.
     ///
-    pub fn try_into_project(
+    pub fn try_to_project(
         &mut self,
         libraries: HashMap<String, HashMap<String, String>>,
         pipeline: SolcPipeline,

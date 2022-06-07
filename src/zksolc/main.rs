@@ -50,93 +50,116 @@ fn main_inner() -> anyhow::Result<()> {
         compiler_solidity::SolcPipeline::EVM
     };
 
-    let output_selection = compiler_solidity::SolcStandardJsonInputSettings::get_output_selection(
-        arguments
-            .input_files
-            .iter()
-            .map(|path| path.to_string_lossy().to_string())
-            .collect(),
-        pipeline,
-    );
-    let solc_input = if arguments.standard_json {
-        let mut input: compiler_solidity::SolcStandardJsonInput =
-            serde_json::from_reader(std::io::BufReader::new(std::io::stdin()))?;
-        input.settings.output_selection = output_selection;
-        input
-    } else {
-        let language = if arguments.yul {
-            compiler_solidity::SolcStandardJsonInputLanguage::Yul
-        } else {
-            compiler_solidity::SolcStandardJsonInputLanguage::Solidity
+    compiler_llvm_context::initialize_target();
+
+    let build = if arguments.yul {
+        let path = match arguments.input_files.len() {
+            1 => arguments.input_files.remove(0),
+            0 => anyhow::bail!("The input file is missing"),
+            length => anyhow::bail!(
+                "Only one input file is allowed in the Yul mode, but found {}",
+                length
+            ),
         };
-        compiler_solidity::SolcStandardJsonInput::try_from_paths(
-            language,
-            arguments.input_files.as_slice(),
-            arguments.libraries,
-            output_selection,
-            true,
-        )?
-    };
 
-    let libraries = solc_input.settings.libraries.clone().unwrap_or_default();
-    let optimize = if arguments.standard_json {
-        solc_input.settings.optimizer.enabled
+        let project = compiler_solidity::Project::try_from_default_yul(&path, &solc_version)?;
+        let optimizer_settings = if arguments.optimize {
+            compiler_llvm_context::OptimizerSettings::new(
+                inkwell::OptimizationLevel::Aggressive,
+                inkwell::OptimizationLevel::Aggressive,
+                true,
+            )
+        } else {
+            compiler_llvm_context::OptimizerSettings::new(
+                inkwell::OptimizationLevel::None,
+                inkwell::OptimizationLevel::None,
+                false,
+            )
+        };
+        project.compile_all(optimizer_settings, dump_flags)
     } else {
-        arguments.optimize
-    };
-    let mut solc_output = solc.standard_json(
-        solc_input,
-        arguments.base_path,
-        arguments.include_paths,
-        arguments.allow_paths,
-    )?;
+        let output_selection =
+            compiler_solidity::SolcStandardJsonInputSettings::get_output_selection(
+                arguments
+                    .input_files
+                    .iter()
+                    .map(|path| path.to_string_lossy().to_string())
+                    .collect(),
+                pipeline,
+            );
+        let solc_input = if arguments.standard_json {
+            let mut input: compiler_solidity::SolcStandardJsonInput =
+                serde_json::from_reader(std::io::BufReader::new(std::io::stdin()))?;
+            input.settings.output_selection = output_selection;
+            input
+        } else {
+            compiler_solidity::SolcStandardJsonInput::try_from_paths(
+                compiler_solidity::SolcStandardJsonInputLanguage::Solidity,
+                arguments.input_files.as_slice(),
+                arguments.libraries,
+                output_selection,
+                true,
+            )?
+        };
 
-    if let Some(errors) = solc_output.errors.as_deref() {
-        let mut cannot_compile = false;
-        for error in errors.iter() {
-            if error.severity.as_str() == "error" {
-                cannot_compile = true;
-                if arguments.standard_json {
-                    serde_json::to_writer(std::io::stdout(), &solc_output)?;
-                    return Ok(());
+        let libraries = solc_input.settings.libraries.clone().unwrap_or_default();
+        let optimize = if arguments.standard_json {
+            solc_input.settings.optimizer.enabled
+        } else {
+            arguments.optimize
+        };
+        let mut solc_output = solc.standard_json(
+            solc_input,
+            arguments.base_path,
+            arguments.include_paths,
+            arguments.allow_paths,
+        )?;
+
+        if let Some(errors) = solc_output.errors.as_deref() {
+            let mut cannot_compile = false;
+            for error in errors.iter() {
+                if error.severity.as_str() == "error" {
+                    cannot_compile = true;
+                    if arguments.standard_json {
+                        serde_json::to_writer(std::io::stdout(), &solc_output)?;
+                        return Ok(());
+                    }
+                }
+
+                if !arguments.standard_json && arguments.combined_json.is_none() {
+                    eprintln!("{}", error);
                 }
             }
 
-            if !arguments.standard_json && arguments.combined_json.is_none() {
-                eprintln!("{}", error);
+            if cannot_compile {
+                anyhow::bail!("Error(s) found. Compilation aborted");
             }
         }
 
-        if cannot_compile {
-            anyhow::bail!("Error(s) found. Compilation aborted");
+        let project =
+            solc_output.try_to_project(libraries, pipeline, solc_version, dump_flags.as_slice())?;
+        let optimizer_settings = if optimize {
+            compiler_llvm_context::OptimizerSettings::new(
+                inkwell::OptimizationLevel::Aggressive,
+                inkwell::OptimizationLevel::Aggressive,
+                true,
+            )
+        } else {
+            compiler_llvm_context::OptimizerSettings::new(
+                inkwell::OptimizationLevel::None,
+                inkwell::OptimizationLevel::None,
+                false,
+            )
+        };
+        let build = project.compile_all(optimizer_settings, dump_flags)?;
+        if arguments.standard_json {
+            solc_output.sources = None;
+            build.write_to_standard_json(&mut solc_output)?;
+            serde_json::to_writer(std::io::stdout(), &solc_output)?;
+            return Ok(());
         }
-    }
-
-    let project =
-        solc_output.try_into_project(libraries, pipeline, solc_version, dump_flags.as_slice())?;
-    compiler_llvm_context::initialize_target();
-
-    let optimizer_settings = if optimize {
-        compiler_llvm_context::OptimizerSettings::new(
-            inkwell::OptimizationLevel::Aggressive,
-            inkwell::OptimizationLevel::Aggressive,
-            true,
-        )
-    } else {
-        compiler_llvm_context::OptimizerSettings::new(
-            inkwell::OptimizationLevel::None,
-            inkwell::OptimizationLevel::None,
-            false,
-        )
-    };
-    let build = project.compile_all(optimizer_settings, dump_flags)?;
-
-    if arguments.standard_json {
-        solc_output.sources = None;
-        build.write_to_standard_json(&mut solc_output)?;
-        serde_json::to_writer(std::io::stdout(), &solc_output)?;
-        return Ok(());
-    }
+        Ok(build)
+    }?;
 
     let combined_json = if let Some(combined_json) = arguments.combined_json {
         Some(solc.combined_json(arguments.input_files.as_slice(), combined_json.as_str())?)
