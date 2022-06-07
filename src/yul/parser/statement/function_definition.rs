@@ -224,8 +224,6 @@ where
             _ => context.build_unconditional_branch(context.function().return_block),
         }
 
-        context.build_catch_block();
-
         match r#return {
             compiler_llvm_context::FunctionReturn::None => {
                 context.set_basic_block(context.function().return_block);

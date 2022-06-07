@@ -877,8 +877,6 @@ where
             }
         }
 
-        context.build_catch_block();
-
         context.set_basic_block(context.function().return_block);
         context.build_return(None);
 

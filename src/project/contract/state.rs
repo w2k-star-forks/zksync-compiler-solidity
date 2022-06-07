@@ -20,6 +20,8 @@ pub enum State {
     Waiter(Arc<(Mutex<()>, Condvar)>),
     /// The contract is built.
     Build(ContractBuild),
+    /// The contract build has failed.
+    Error(anyhow::Error),
 }
 
 impl State {

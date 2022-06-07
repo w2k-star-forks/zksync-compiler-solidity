@@ -81,7 +81,7 @@ impl Contract {
         let mut context = match self.source {
             Source::Yul(_) => compiler_llvm_context::Context::new(
                 &llvm,
-                self.identifier(),
+                self.path.as_str(),
                 optimizer,
                 Some(project.clone()),
                 dump_flags,
@@ -90,7 +90,7 @@ impl Contract {
                 let version = project.read().expect("Sync").version.to_owned();
                 compiler_llvm_context::Context::new_evm(
                     &llvm,
-                    self.identifier(),
+                    self.path.as_str(),
                     optimizer,
                     Some(project.clone()),
                     dump_flags,

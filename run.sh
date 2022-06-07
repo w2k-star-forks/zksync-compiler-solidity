@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -Ce
+set -ex
 
 # Logging level: 'error' | 'warn' | 'info' | 'debug' | 'trace' (default is 'warn')
 case "${1}" in
