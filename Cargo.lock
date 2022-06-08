@@ -127,12 +127,13 @@ source = "git+ssh://git@github.com/matter-labs/compiler-common?branch=az/vm-v1.1
 [[package]]
 name = "compiler-llvm-context"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#7bd7fd971e64f1b0e4f82a34d284e6b7ab9a60b0"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#7cc0dd46a05d63e3d82671dd17958a7c0fbf16e3"
 dependencies = [
  "anyhow",
  "compiler-common",
  "hex",
  "inkwell",
+ "itertools",
  "md5",
  "num",
  "semver 1.0.9",
@@ -418,6 +419,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "itertools"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
+dependencies = [
+ "either",
 ]
 
 [[package]]
@@ -1169,7 +1179,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zkevm-assembly"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#ff77a8e0c6824bcc049ca937e2e3d64c58a8fd00"
+source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#ff77a8e0c6824bcc049ca937e2e3d64c58a8fd00"
 dependencies = [
  "env_logger",
  "hex",

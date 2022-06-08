@@ -64,17 +64,9 @@ fn main_inner() -> anyhow::Result<()> {
 
         let project = compiler_solidity::Project::try_from_default_yul(&path, &solc_version)?;
         let optimizer_settings = if arguments.optimize {
-            compiler_llvm_context::OptimizerSettings::new(
-                inkwell::OptimizationLevel::Aggressive,
-                inkwell::OptimizationLevel::Aggressive,
-                true,
-            )
+            compiler_llvm_context::OptimizerSettings::cycles()
         } else {
-            compiler_llvm_context::OptimizerSettings::new(
-                inkwell::OptimizationLevel::None,
-                inkwell::OptimizationLevel::None,
-                false,
-            )
+            compiler_llvm_context::OptimizerSettings::none()
         };
         project.compile_all(optimizer_settings, dump_flags)
     } else {
@@ -139,17 +131,9 @@ fn main_inner() -> anyhow::Result<()> {
         let project =
             solc_output.try_to_project(libraries, pipeline, solc_version, dump_flags.as_slice())?;
         let optimizer_settings = if optimize {
-            compiler_llvm_context::OptimizerSettings::new(
-                inkwell::OptimizationLevel::Aggressive,
-                inkwell::OptimizationLevel::Aggressive,
-                true,
-            )
+            compiler_llvm_context::OptimizerSettings::cycles()
         } else {
-            compiler_llvm_context::OptimizerSettings::new(
-                inkwell::OptimizationLevel::None,
-                inkwell::OptimizationLevel::None,
-                false,
-            )
+            compiler_llvm_context::OptimizerSettings::none()
         };
         let build = project.compile_all(optimizer_settings, dump_flags)?;
         if arguments.standard_json {
