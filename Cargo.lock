@@ -127,7 +127,7 @@ source = "git+ssh://git@github.com/matter-labs/compiler-common?branch=az/vm-v1.1
 [[package]]
 name = "compiler-llvm-context"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#7cc0dd46a05d63e3d82671dd17958a7c0fbf16e3"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#5fe4c44f628c36bdb0153afade46112795d15082"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -136,6 +136,7 @@ dependencies = [
  "itertools",
  "md5",
  "num",
+ "regex",
  "semver 1.0.9",
  "sha2",
  "sha3",
@@ -400,12 +401,13 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#89e225cfecb09f2902a8e0f208e84471e1e8c28c"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#860e1721c83dacf651a540e454e250eea4fed6ec"
 dependencies = [
  "either",
  "inkwell_internals",
  "libc",
  "llvm-sys",
+ "num",
  "once_cell",
  "parking_lot",
  "regex",
@@ -414,7 +416,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.3.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#89e225cfecb09f2902a8e0f208e84471e1e8c28c"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#860e1721c83dacf651a540e454e250eea4fed6ec"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1179,7 +1181,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zkevm-assembly"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#ff77a8e0c6824bcc049ca937e2e3d64c58a8fd00"
+source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#5d4b8392ece3aa43e5f3efd3c0ba37c890d4070c"
 dependencies = [
  "env_logger",
  "hex",
@@ -1198,7 +1200,7 @@ dependencies = [
 [[package]]
 name = "zkevm_opcode_defs"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zkevm_opcode_defs.git?branch=v1.1.1#b701415976be172f8dfaa6287fc0847dc7247727"
+source = "git+ssh://git@github.com/matter-labs/zkevm_opcode_defs.git?branch=v1.1.1#b701415976be172f8dfaa6287fc0847dc7247727"
 dependencies = [
  "bitflags",
  "ethereum-types",
