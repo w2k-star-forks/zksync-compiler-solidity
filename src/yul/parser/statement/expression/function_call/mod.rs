@@ -116,6 +116,15 @@ impl FunctionCall {
                     function_pointer.into_pointer_value().as_basic_value_enum(),
                 );
 
+                if function.value.count_params() as usize != values.len() {
+                    anyhow::bail!(
+                        "Function `{}` expected {} arguments, found {}",
+                        name,
+                        function.value.count_params(),
+                        values.len()
+                    );
+                }
+
                 let return_value = context.build_invoke_near_call_abi(
                     function.value,
                     values,
@@ -157,6 +166,15 @@ impl FunctionCall {
                         .build_alloca(r#type, format!("{}_return_pointer_argument", name).as_str());
                     context.build_store(pointer, r#type.const_zero());
                     values.insert(0, pointer.as_basic_value_enum());
+                }
+
+                if function.value.count_params() as usize != values.len() {
+                    anyhow::bail!(
+                        "Function `{}` expected {} arguments, found {}",
+                        name,
+                        function.value.count_params(),
+                        values.len()
+                    );
                 }
 
                 let return_value = context.build_invoke(

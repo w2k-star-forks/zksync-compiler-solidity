@@ -171,9 +171,7 @@ impl Project {
                 State::Build(contract_build) => {
                     build.contracts.insert(path, contract_build);
                 }
-                State::Error(error) => {
-                    anyhow::bail!("Contract `{}` compiling error: {:?}", path, error);
-                }
+                State::Error(error) => return Err(error),
                 _ => panic!("Contract `{}` must be built at this point", path),
             }
         }
@@ -187,7 +185,7 @@ impl Project {
         let yul = std::fs::read_to_string(path)
             .map_err(|error| anyhow::anyhow!("Yul file {:?} reading error: {}", path, error))?;
         let mut lexer = Lexer::new(yul.clone());
-        let path = "Default".to_owned();
+        let path = path.to_string_lossy().to_string();
         let object = Object::parse(&mut lexer, None)
             .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
 
