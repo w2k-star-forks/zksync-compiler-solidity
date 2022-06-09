@@ -137,7 +137,7 @@ dependencies = [
  "md5",
  "num",
  "regex",
- "semver 1.0.9",
+ "semver 1.0.10",
  "sha2",
  "sha3",
  "zkevm-assembly",
@@ -158,9 +158,10 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
- "semver 1.0.9",
+ "semver 1.0.10",
  "serde",
  "serde_json",
+ "shell-words",
  "structopt",
  "zkevm-assembly",
 ]
@@ -401,7 +402,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell#afb9068c534dddf313b3c7a37e83e1adb057c391"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell#aba18ebf3b7f749339eea9c44811afbeadd0fb4d"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -414,7 +415,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.5.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell#afb9068c534dddf313b3c7a37e83e1adb057c391"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell#aba18ebf3b7f749339eea9c44811afbeadd0fb4d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -868,9 +869,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cb243bdfdb5936c8dc3c45762a19d12ab4550cdc753bc247637d4ec35a040fd"
+checksum = "a41d061efea015927ac527063765e73601444cdc344ba855bc7bd44578b25e1c"
 
 [[package]]
 name = "semver-parser"
@@ -932,6 +933,12 @@ dependencies = [
  "digest",
  "keccak",
 ]
+
+[[package]]
+name = "shell-words"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "smallvec"

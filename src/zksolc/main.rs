@@ -51,6 +51,16 @@ fn main_inner() -> anyhow::Result<()> {
     };
 
     compiler_llvm_context::initialize_target();
+    if let Some(llvm_options) = arguments.llvm_options {
+        let llvm_options = shell_words::split(llvm_options.as_str())
+            .map_err(|error| anyhow::anyhow!("LLVM options parsing error: {}", error))?;
+        let llvm_options = Vec::from_iter(llvm_options.iter().map(String::as_str));
+        inkwell::support::parse_command_line_options(
+            llvm_options.len() as i32,
+            llvm_options.as_slice(),
+            "",
+        );
+    }
 
     let build = if arguments.yul {
         let path = match arguments.input_files.len() {

@@ -54,6 +54,10 @@ pub struct Arguments {
     #[structopt(long = "optimize")]
     pub optimize: bool,
 
+    /// Sets the LLVM optimizer options.
+    #[structopt(long = "llvm-opt")]
+    pub llvm_options: Option<String>,
+
     /// Path to the `solc` executable.
     /// By default, the one in $PATH is used.
     #[structopt(long = "solc")]

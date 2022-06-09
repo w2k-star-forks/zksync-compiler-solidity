@@ -116,7 +116,7 @@ impl FunctionCall {
                     function_pointer.into_pointer_value().as_basic_value_enum(),
                 );
 
-                if function.value.count_params() as usize != values.len() {
+                if function.value.count_params() as usize != (values.len() - 2) {
                     anyhow::bail!(
                         "Function `{}` expected {} arguments, found {}",
                         name,

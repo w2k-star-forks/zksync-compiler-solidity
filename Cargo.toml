@@ -14,6 +14,7 @@ path = "src/zksolc/main.rs"
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }
+shell-words = "1.1"
 colored = "2.0"
 anyhow = "1.0"
 
