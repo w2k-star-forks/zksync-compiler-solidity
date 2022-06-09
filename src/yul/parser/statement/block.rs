@@ -108,6 +108,10 @@ where
         context.set_function(current_function.clone());
         context.set_basic_block(current_block);
         for statement in local_statements.into_iter() {
+            if context.basic_block().get_terminator().is_some() {
+                break;
+            }
+
             match statement {
                 Statement::Block(block) => {
                     block.into_llvm(context)?;

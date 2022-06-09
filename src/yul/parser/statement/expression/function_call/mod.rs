@@ -686,6 +686,16 @@ impl FunctionCall {
                     .as_basic_value_enum(),
             )),
 
+            Name::VerbatimI0O0 => {
+                let mut arguments = self.pop_arguments::<D, 1>(context)?;
+                let identifier = arguments[0]
+                    .original
+                    .take()
+                    .ok_or_else(|| anyhow::anyhow!("Verbatim literal is missing"))?;
+
+                compiler_llvm_context::verbatim::i0_o0(context, identifier)
+            }
+
             Name::GasPrice => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::ChainId => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::BlockHash => Ok(Some(context.field_const(0).as_basic_value_enum())),

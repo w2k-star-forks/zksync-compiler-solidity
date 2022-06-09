@@ -198,6 +198,9 @@ pub enum Name {
     ExtCodeHash,
     /// end execution, destroy current contract and send funds to `a`
     SelfDestruct,
+
+    /// verbatim instruction with 0 inputs and 0 outputs
+    VerbatimI0O0,
 }
 
 impl From<&str> for Name {
@@ -302,6 +305,8 @@ impl From<&str> for Name {
             "extcodecopy" => Self::ExtCodeCopy,
             "extcodehash" => Self::ExtCodeHash,
             "selfdestruct" => Self::SelfDestruct,
+
+            "verbatim_i0_o0" => Self::VerbatimI0O0,
 
             input => Self::UserDefined(input.to_owned()),
         }
