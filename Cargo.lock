@@ -127,7 +127,7 @@ source = "git+ssh://git@github.com/matter-labs/compiler-common?branch=az/vm-v1.1
 [[package]]
 name = "compiler-llvm-context"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#e40a92aba9d45b2ab6f61677a8eafd191350e002"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#dc4e8fbc6bd23e28684cf2394397b1cd45d2605c"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -401,22 +401,20 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#860e1721c83dacf651a540e454e250eea4fed6ec"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell#afb9068c534dddf313b3c7a37e83e1adb057c391"
 dependencies = [
  "either",
  "inkwell_internals",
  "libc",
  "llvm-sys",
- "num",
  "once_cell",
  "parking_lot",
- "regex",
 ]
 
 [[package]]
 name = "inkwell_internals"
-version = "0.3.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell?branch=master#860e1721c83dacf651a540e454e250eea4fed6ec"
+version = "0.5.0"
+source = "git+ssh://git@github.com/matter-labs-forks/inkwell#afb9068c534dddf313b3c7a37e83e1adb057c391"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -458,8 +456,8 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "llvm-sys"
-version = "130.0.0"
-source = "git+ssh://git@github.com/matter-labs-forks/llvm-sys.rs#49a40636bb5a83e42a62262b2627c2065f1ba8bc"
+version = "130.0.2"
+source = "git+ssh://git@github.com/matter-labs-forks/llvm-sys.rs#6dcdb445a6c8254f25d6c0e43513b11ccd11de90"
 dependencies = [
  "cc",
  "lazy_static",

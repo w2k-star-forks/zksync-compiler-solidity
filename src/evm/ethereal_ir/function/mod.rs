@@ -790,7 +790,8 @@ where
             context.void_type().fn_type(
                 &[context
                     .integer_type(compiler_common::BITLENGTH_BOOLEAN as usize)
-                    .as_basic_type_enum()],
+                    .as_basic_type_enum()
+                    .into()],
                 false,
             ),
             Some(inkwell::module::Linkage::Private),
