@@ -19,17 +19,25 @@ pub struct Contract {
     pub identifier: String,
     /// The LLVM module build.
     pub build: compiler_llvm_context::Build,
+    /// The ABI specification JSON.
+    pub abi: Option<serde_json::Value>,
 }
 
 impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(path: String, identifier: String, build: compiler_llvm_context::Build) -> Self {
+    pub fn new(
+        path: String,
+        identifier: String,
+        build: compiler_llvm_context::Build,
+        abi: Option<serde_json::Value>,
+    ) -> Self {
         Self {
             path,
             identifier,
             build,
+            abi,
         }
     }
 
@@ -41,6 +49,7 @@ impl Contract {
         path: &Path,
         output_assembly: bool,
         output_binary: bool,
+        output_abi: bool,
         overwrite: bool,
     ) -> anyhow::Result<()> {
         let file_name = Self::short_path(self.path.as_str());
@@ -90,6 +99,30 @@ impl Contract {
                     .map_err(|error| {
                         anyhow::anyhow!("File {:?} writing error: {}", file_path, error)
                     })?;
+            }
+        }
+
+        if let Some(abi) = self.abi {
+            if output_abi {
+                let file_name = format!("{}.{}", file_name, compiler_common::EXTENSION_ABI);
+                let mut file_path = path.to_owned();
+                file_path.push(file_name);
+
+                if file_path.exists() && !overwrite {
+                    eprintln!(
+                        "Refusing to overwrite an existing file {:?} (use --overwrite to force).",
+                        file_path
+                    );
+                } else {
+                    File::create(&file_path)
+                        .map_err(|error| {
+                            anyhow::anyhow!("File {:?} creating error: {}", file_path, error)
+                        })?
+                        .write_all(abi.to_string().as_bytes())
+                        .map_err(|error| {
+                            anyhow::anyhow!("File {:?} writing error: {}", file_path, error)
+                        })?;
+                }
             }
         }
 

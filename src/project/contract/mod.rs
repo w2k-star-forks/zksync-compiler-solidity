@@ -26,14 +26,16 @@ pub struct Contract {
     pub path: String,
     /// The source code data.
     pub source: Source,
+    /// The ABI specification JSON.
+    pub abi: Option<serde_json::Value>,
 }
 
 impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(path: String, source: Source) -> Self {
-        Self { path, source }
+    pub fn new(path: String, source: Source, abi: Option<serde_json::Value>) -> Self {
+        Self { path, source, abi }
     }
 
     ///

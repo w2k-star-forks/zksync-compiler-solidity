@@ -53,12 +53,12 @@ impl Output {
         dump_flags: &[DumpFlag],
     ) -> anyhow::Result<Project> {
         self.preprocess_ast()?;
-
         if let SolcPipeline::EVM = pipeline {
             self.preprocess_dependencies()?;
         }
+        self.sources = None;
 
-        let files = match self.contracts.as_ref() {
+        let files = match self.contracts.as_mut() {
             Some(files) => files,
             None => {
                 anyhow::bail!(
@@ -72,8 +72,8 @@ impl Output {
         };
         let mut project_contracts = HashMap::with_capacity(files.len());
 
-        for (path, contracts) in files.iter() {
-            for (name, contract) in contracts.iter() {
+        for (path, contracts) in files.iter_mut() {
+            for (name, contract) in contracts.iter_mut() {
                 let full_path = format!("{}:{}", path, name);
 
                 let source = match pipeline {
@@ -109,7 +109,8 @@ impl Output {
                     }
                 };
 
-                let project_contract = ProjectContract::new(full_path.clone(), source);
+                let project_contract =
+                    ProjectContract::new(full_path.clone(), source, contract.abi.take());
                 project_contracts.insert(full_path, project_contract);
             }
         }

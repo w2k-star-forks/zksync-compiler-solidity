@@ -116,6 +116,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.include_paths,
             arguments.allow_paths,
         )?;
+        println!("{}", serde_json::to_string_pretty(&solc_output).unwrap());
 
         if let Some(errors) = solc_output.errors.as_deref() {
             let mut cannot_compile = false;
@@ -147,7 +148,6 @@ fn main_inner() -> anyhow::Result<()> {
         };
         let build = project.compile_all(optimizer_settings, dump_flags)?;
         if arguments.standard_json {
-            solc_output.sources = None;
             build.write_to_standard_json(&mut solc_output)?;
             serde_json::to_writer(std::io::stdout(), &solc_output)?;
             return Ok(());
@@ -172,6 +172,7 @@ fn main_inner() -> anyhow::Result<()> {
                 &output_directory,
                 arguments.output_assembly,
                 arguments.output_binary,
+                arguments.output_abi,
                 arguments.overwrite,
             )?;
         }

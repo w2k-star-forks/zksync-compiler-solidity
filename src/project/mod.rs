@@ -80,7 +80,7 @@ impl Project {
             .remove(contract_path)
             .expect("Always exists")
         {
-            ContractState::Source(contract) => {
+            ContractState::Source(mut contract) => {
                 let waiter = ContractState::waiter();
                 project_guard.contract_states.insert(
                     contract_path.to_owned(),
@@ -89,9 +89,11 @@ impl Project {
                 std::mem::drop(project_guard);
 
                 let identifier = contract.identifier().to_owned();
+                let abi = contract.abi.take();
                 match contract.compile(project.clone(), optimizer_settings, dump_flags) {
                     Ok(build) => {
-                        let build = ContractBuild::new(contract_path.to_owned(), identifier, build);
+                        let build =
+                            ContractBuild::new(contract_path.to_owned(), identifier, build, abi);
                         project
                             .write()
                             .expect("Sync")
@@ -192,7 +194,7 @@ impl Project {
         let mut project_contracts = HashMap::with_capacity(1);
         project_contracts.insert(
             path.clone(),
-            Contract::new(path, Source::new_yul(yul, object)),
+            Contract::new(path, Source::new_yul(yul, object), None),
         );
         Ok(Self::new(
             version.to_owned(),
@@ -215,7 +217,7 @@ impl Project {
         let mut project_contracts = HashMap::with_capacity(1);
         project_contracts.insert(
             path.clone(),
-            Contract::new(path, Source::new_yul(yul.to_owned(), object)),
+            Contract::new(path, Source::new_yul(yul.to_owned(), object), None),
         );
         Ok(Self::new(
             version.to_owned(),
