@@ -4,7 +4,7 @@
 
 pub mod contract;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::solc::combined_json::CombinedJson;
@@ -16,22 +16,13 @@ use self::contract::Contract;
 ///
 /// The Solidity project build.
 ///
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Build {
     /// The contract data,
-    pub contracts: HashMap<String, Contract>,
+    pub contracts: BTreeMap<String, Contract>,
 }
 
 impl Build {
-    ///
-    /// A shortcut constructor.
-    ///
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            contracts: HashMap::with_capacity(capacity),
-        }
-    }
-
     ///
     /// Writes all contracts to the specified directory.
     ///

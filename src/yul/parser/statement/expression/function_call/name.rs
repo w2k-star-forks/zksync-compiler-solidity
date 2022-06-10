@@ -200,11 +200,37 @@ pub enum Name {
     SelfDestruct,
 
     /// verbatim instruction with 0 inputs and 0 outputs
-    VerbatimI0O0,
+    Verbatim {
+        /// the number of input arguments
+        input_size: usize,
+        /// the number of output arguments
+        output_size: usize,
+    },
+}
+
+impl Name {
+    ///
+    /// Tries parsing the verbatim instruction.
+    ///
+    fn parse_verbatim(input: &str) -> Option<Self> {
+        let verbatim = input.strip_prefix("verbatim")?;
+        let regex = regex::Regex::new(r#"_(\d+)i_(\d+)o"#).expect("Always valid");
+        let captures = regex.captures(verbatim)?;
+        let input_size: usize = captures.get(1)?.as_str().parse().ok()?;
+        let output_size: usize = captures.get(2)?.as_str().parse().ok()?;
+        Some(Self::Verbatim {
+            input_size,
+            output_size,
+        })
+    }
 }
 
 impl From<&str> for Name {
     fn from(input: &str) -> Self {
+        if let Some(verbatim) = Self::parse_verbatim(input) {
+            return verbatim;
+        }
+
         match input {
             "add" => Self::Add,
             "sub" => Self::Sub,
@@ -305,8 +331,6 @@ impl From<&str> for Name {
             "extcodecopy" => Self::ExtCodeCopy,
             "extcodehash" => Self::ExtCodeHash,
             "selfdestruct" => Self::SelfDestruct,
-
-            "verbatim_i0_o0" => Self::VerbatimI0O0,
 
             input => Self::UserDefined(input.to_owned()),
         }

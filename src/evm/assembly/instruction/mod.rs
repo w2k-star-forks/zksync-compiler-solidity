@@ -7,7 +7,7 @@ pub mod jump;
 pub mod name;
 pub mod stack;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -259,7 +259,7 @@ impl Instruction {
     ///
     pub fn replace_data_aliases(
         instructions: &mut [Self],
-        mapping: &HashMap<String, String>,
+        mapping: &BTreeMap<String, String>,
     ) -> anyhow::Result<()> {
         for instruction in instructions.iter_mut() {
             if let Instruction {

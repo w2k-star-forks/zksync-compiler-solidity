@@ -4,7 +4,7 @@
 
 pub mod contract;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -20,7 +20,7 @@ use self::contract::Contract;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CombinedJson {
     /// The contract entries.
-    pub contracts: HashMap<String, Contract>,
+    pub contracts: BTreeMap<String, Contract>,
     /// The compiler version.
     pub version: String,
 }

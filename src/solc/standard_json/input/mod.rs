@@ -6,7 +6,7 @@ pub mod language;
 pub mod settings;
 pub mod source;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use serde::Deserialize;
@@ -25,7 +25,7 @@ pub struct Input {
     /// The input language.
     pub language: Language,
     /// The input source code files hashmap.
-    pub sources: HashMap<String, Source>,
+    pub sources: BTreeMap<String, Source>,
     /// The compiler settings.
     pub settings: Settings,
 }
@@ -41,7 +41,7 @@ impl Input {
         output_selection: serde_json::Value,
         optimize: bool,
     ) -> anyhow::Result<Self> {
-        let mut sources = HashMap::with_capacity(paths.len());
+        let mut sources = BTreeMap::new();
         for path in paths.iter() {
             let source = Source::try_from(path.as_path())?;
             sources.insert(path.to_string_lossy().to_string(), source);
@@ -62,8 +62,8 @@ impl Input {
     /// Only for the integration test purposes.
     ///
     pub fn try_from_sources(
-        sources: HashMap<String, String>,
-        libraries: HashMap<String, HashMap<String, String>>,
+        sources: BTreeMap<String, String>,
+        libraries: BTreeMap<String, BTreeMap<String, String>>,
         output_selection: serde_json::Value,
         optimize: bool,
     ) -> anyhow::Result<Self> {

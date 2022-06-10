@@ -704,14 +704,162 @@ impl FunctionCall {
                     .as_basic_value_enum(),
             )),
 
-            Name::VerbatimI0O0 => {
+            Name::Verbatim {
+                input_size,
+                output_size,
+            } => {
+                if output_size > 1 {
+                    anyhow::bail!(
+                        "Verbatim instructions with multiple return values are not supported"
+                    );
+                }
+
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
                 let identifier = arguments[0]
                     .original
                     .take()
                     .ok_or_else(|| anyhow::anyhow!("Verbatim literal is missing"))?;
+                match identifier.as_str() {
+                    identifier @ "to_l1" => {
+                        const ARGUMENTS_COUNT: usize = 3;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
 
-                compiler_llvm_context::verbatim::i0_o0(context, identifier)
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::to_l1(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                            arguments[2].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "code_source" => {
+                        const ARGUMENTS_COUNT: usize = 0;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        compiler_llvm_context::contract::simulation::code_source(context).map(Some)
+                    }
+                    identifier @ "precompile" => {
+                        const ARGUMENTS_COUNT: usize = 2;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::precompile(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "meta" => {
+                        const ARGUMENTS_COUNT: usize = 0;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        compiler_llvm_context::contract::simulation::meta(context).map(Some)
+                    }
+                    identifier @ "mimic_call" => {
+                        const ARGUMENTS_COUNT: usize = 3;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::mimic_call(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                            arguments[2].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "system_call" => {
+                        const ARGUMENTS_COUNT: usize = 5;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::system_call(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                            arguments[2].into_int_value(),
+                            arguments[3].into_int_value(),
+                            arguments[4].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "set_context_u128" => {
+                        const ARGUMENTS_COUNT: usize = 1;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::set_context_value(
+                            context,
+                            arguments[0].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "throw" => {
+                        const ARGUMENTS_COUNT: usize = 0;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "Internal function `{}` expected {} arguments, found {}",
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        compiler_llvm_context::verbatim::throw(context)
+                    }
+                    identifier => anyhow::bail!("Found unknown internal function `{}`", identifier),
+                }
             }
 
             Name::GasPrice => Ok(Some(context.field_const(0).as_basic_value_enum())),

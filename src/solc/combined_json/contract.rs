@@ -2,7 +2,7 @@
 //! The `solc --combined-json` contract representation.
 //!
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -15,7 +15,7 @@ use serde::Serialize;
 pub struct Contract {
     /// The `solc` hashes output.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hashes: Option<HashMap<String, String>>,
+    pub hashes: Option<BTreeMap<String, String>>,
     /// The `solc` ABI output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub abi: Option<serde_json::Value>,
@@ -27,7 +27,7 @@ pub struct Contract {
     pub bin_runtime: Option<String>,
     /// The factory dependencies.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub factory_deps: Option<HashMap<String, String>>,
+    pub factory_deps: Option<BTreeMap<String, String>>,
 }
 
 impl Contract {

@@ -4,7 +4,7 @@
 
 pub mod evm;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -28,7 +28,7 @@ pub struct Contract {
     pub evm: Option<EVM>,
     /// The contracts factory dependencies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub factory_dependencies: Option<HashMap<String, String>>,
+    pub factory_dependencies: Option<BTreeMap<String, String>>,
     /// The contract's zkEVM bytecode hash.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,

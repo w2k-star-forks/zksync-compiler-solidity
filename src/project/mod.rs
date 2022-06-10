@@ -4,7 +4,7 @@
 
 pub mod contract;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -31,11 +31,11 @@ pub struct Project {
     /// The Solidity project version.
     pub version: semver::Version,
     /// The contract data,
-    pub contract_states: HashMap<String, ContractState>,
+    pub contract_states: BTreeMap<String, ContractState>,
     /// The mapping of auxiliary identifiers, e.g. Yul object names, to full contract paths.
-    pub identifier_paths: HashMap<String, String>,
+    pub identifier_paths: BTreeMap<String, String>,
     /// The library addresses.
-    pub libraries: HashMap<String, HashMap<String, String>>,
+    pub libraries: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 impl Project {
@@ -44,12 +44,10 @@ impl Project {
     ///
     pub fn new(
         version: semver::Version,
-        contracts: HashMap<String, Contract>,
-        libraries: HashMap<String, HashMap<String, String>>,
+        contracts: BTreeMap<String, Contract>,
+        libraries: BTreeMap<String, BTreeMap<String, String>>,
     ) -> Self {
-        let capacity = contracts.len();
-
-        let mut identifier_paths = HashMap::with_capacity(capacity);
+        let mut identifier_paths = BTreeMap::new();
         for (path, contract) in contracts.iter() {
             identifier_paths.insert(contract.identifier().to_owned(), path.to_owned());
         }
@@ -167,7 +165,7 @@ impl Project {
             .expect("No other references must exist at this point")
             .into_inner()
             .expect("Sync");
-        let mut build = Build::with_capacity(project.contract_states.len());
+        let mut build = Build::default();
         for (path, state) in project.contract_states.into_iter() {
             match state {
                 State::Build(contract_build) => {
@@ -191,7 +189,7 @@ impl Project {
         let object = Object::parse(&mut lexer, None)
             .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
 
-        let mut project_contracts = HashMap::with_capacity(1);
+        let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path.clone(),
             Contract::new(path, Source::new_yul(yul, object), None),
@@ -199,7 +197,7 @@ impl Project {
         Ok(Self::new(
             version.to_owned(),
             project_contracts,
-            HashMap::new(),
+            BTreeMap::new(),
         ))
     }
 
@@ -214,7 +212,7 @@ impl Project {
         let object = Object::parse(&mut lexer, None)
             .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
 
-        let mut project_contracts = HashMap::with_capacity(1);
+        let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path.clone(),
             Contract::new(path, Source::new_yul(yul.to_owned(), object), None),
@@ -222,7 +220,7 @@ impl Project {
         Ok(Self::new(
             version.to_owned(),
             project_contracts,
-            HashMap::new(),
+            BTreeMap::new(),
         ))
     }
 }

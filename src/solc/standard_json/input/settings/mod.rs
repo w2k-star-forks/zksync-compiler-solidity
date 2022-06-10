@@ -5,7 +5,7 @@
 pub mod optimizer;
 pub mod selection;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -23,7 +23,7 @@ use self::selection::Selection;
 pub struct Settings {
     /// The linker library addresses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub libraries: Option<HashMap<String, HashMap<String, String>>>,
+    pub libraries: Option<BTreeMap<String, BTreeMap<String, String>>>,
     /// The output selection filters.
     pub output_selection: serde_json::Value,
     /// The optimizer settings.
@@ -35,7 +35,7 @@ impl Settings {
     /// A shortcut constructor.
     ///
     pub fn new(
-        libraries: HashMap<String, HashMap<String, String>>,
+        libraries: BTreeMap<String, BTreeMap<String, String>>,
         output_selection: serde_json::Value,
         optimize: bool,
     ) -> Self {
@@ -105,8 +105,8 @@ impl Settings {
     ///
     pub fn parse_libraries(
         input: Vec<String>,
-    ) -> anyhow::Result<HashMap<String, HashMap<String, String>>> {
-        let mut libraries = HashMap::with_capacity(input.len());
+    ) -> anyhow::Result<BTreeMap<String, BTreeMap<String, String>>> {
+        let mut libraries = BTreeMap::new();
         for (index, library) in input.into_iter().enumerate() {
             let mut path_and_address = library.split('=');
             let path = path_and_address
@@ -124,7 +124,7 @@ impl Settings {
                 .ok_or_else(|| anyhow::anyhow!("The library `{}` address is missing", path))?;
             libraries
                 .entry(file.to_owned())
-                .or_insert_with(HashMap::new)
+                .or_insert_with(BTreeMap::new)
                 .insert(contract.to_owned(), address.to_owned());
         }
         Ok(libraries)

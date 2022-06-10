@@ -6,7 +6,6 @@ pub mod data;
 pub mod instruction;
 
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::collections::HashSet;
 
 use serde::Deserialize;
@@ -76,9 +75,9 @@ impl Assembly {
     pub fn deploy_dependencies_pass(
         &mut self,
         full_path: &str,
-        hash_data_mapping: &HashMap<String, String>,
-    ) -> anyhow::Result<HashMap<String, String>> {
-        let mut index_path_mapping = HashMap::with_capacity(hash_data_mapping.len());
+        hash_data_mapping: &BTreeMap<String, String>,
+    ) -> anyhow::Result<BTreeMap<String, String>> {
+        let mut index_path_mapping = BTreeMap::new();
         let index = "0".repeat(compiler_common::SIZE_FIELD * 2);
         index_path_mapping.insert(index, full_path.to_owned());
 
@@ -127,9 +126,9 @@ impl Assembly {
     pub fn runtime_dependencies_pass(
         &mut self,
         full_path: &str,
-        hash_data_mapping: &HashMap<String, String>,
-    ) -> anyhow::Result<HashMap<String, String>> {
-        let mut index_path_mapping = HashMap::with_capacity(hash_data_mapping.len());
+        hash_data_mapping: &BTreeMap<String, String>,
+    ) -> anyhow::Result<BTreeMap<String, String>> {
+        let mut index_path_mapping = BTreeMap::new();
         let index = "0".repeat(compiler_common::SIZE_FIELD * 2);
         index_path_mapping.insert(index, full_path.to_owned());
 

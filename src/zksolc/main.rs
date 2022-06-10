@@ -116,7 +116,6 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.include_paths,
             arguments.allow_paths,
         )?;
-        println!("{}", serde_json::to_string_pretty(&solc_output).unwrap());
 
         if let Some(errors) = solc_output.errors.as_deref() {
             let mut cannot_compile = false;

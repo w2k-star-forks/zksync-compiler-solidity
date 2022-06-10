@@ -6,7 +6,7 @@ pub mod contract;
 pub mod error;
 pub mod source;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -32,10 +32,10 @@ use self::source::Source;
 pub struct Output {
     /// The file-contract hashmap.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub contracts: Option<HashMap<String, HashMap<String, Contract>>>,
+    pub contracts: Option<BTreeMap<String, BTreeMap<String, Contract>>>,
     /// The source code mapping data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub sources: Option<HashMap<String, Source>>,
+    pub sources: Option<BTreeMap<String, Source>>,
     /// The compilation errors and warnings.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<SolcStandardJsonOutputError>>,
@@ -47,7 +47,7 @@ impl Output {
     ///
     pub fn try_to_project(
         &mut self,
-        libraries: HashMap<String, HashMap<String, String>>,
+        libraries: BTreeMap<String, BTreeMap<String, String>>,
         pipeline: SolcPipeline,
         version: semver::Version,
         dump_flags: &[DumpFlag],
@@ -70,7 +70,7 @@ impl Output {
                 );
             }
         };
-        let mut project_contracts = HashMap::with_capacity(files.len());
+        let mut project_contracts = BTreeMap::new();
 
         for (path, contracts) in files.iter_mut() {
             for (name, contract) in contracts.iter_mut() {
@@ -126,8 +126,7 @@ impl Output {
             Some(files) => files,
             None => return Ok(()),
         };
-        let files_length = files.len();
-        let mut hash_path_mapping = HashMap::with_capacity(files_length);
+        let mut hash_path_mapping = BTreeMap::new();
 
         for (path, contracts) in files.iter() {
             for (name, contract) in contracts.iter() {
@@ -171,7 +170,7 @@ impl Output {
     fn preprocess_dependency_level(
         full_path: &str,
         assembly: &mut Assembly,
-        hash_path_mapping: &HashMap<String, String>,
+        hash_path_mapping: &BTreeMap<String, String>,
     ) -> anyhow::Result<()> {
         assembly.set_full_path(full_path.to_owned());
 
