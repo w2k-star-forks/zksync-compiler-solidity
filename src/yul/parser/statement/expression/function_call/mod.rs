@@ -395,14 +395,18 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
                 compiler_llvm_context::calldata::copy(context, arguments)
             }
-            Name::ExtCodeSize => {
-                let _arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                Ok(Some(context.field_const(0xffff).as_basic_value_enum()))
-            }
             Name::ReturnDataSize => compiler_llvm_context::return_data::size(context),
             Name::ReturnDataCopy => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
                 compiler_llvm_context::return_data::copy(context, arguments)
+            }
+            Name::ExtCodeSize => {
+                let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
+                compiler_llvm_context::ext_code::size(context, arguments[0].into_int_value())
+            }
+            Name::ExtCodeHash => {
+                let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
+                compiler_llvm_context::ext_code::hash(context, arguments[0].into_int_value())
             }
 
             Name::Return => {
@@ -872,10 +876,6 @@ impl FunctionCall {
             Name::ExtCodeCopy => {
                 let _arguments = self.pop_arguments_llvm::<D, 4>(context)?;
                 Ok(None)
-            }
-            Name::ExtCodeHash => {
-                let _arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                Ok(Some(context.field_const(0).as_basic_value_enum()))
             }
             Name::SelfDestruct => {
                 let _arguments = self.pop_arguments_llvm::<D, 1>(context)?;

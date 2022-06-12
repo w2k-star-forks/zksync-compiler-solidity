@@ -747,10 +747,6 @@ where
                 }
             }
             InstructionName::PUSHSIZE => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::EXTCODESIZE => {
-                let _arguments = self.pop_arguments_llvm(context);
-                Ok(Some(context.field_const(0xffff).as_basic_value_enum()))
-            }
             InstructionName::RETURNDATASIZE => compiler_llvm_context::return_data::size(context),
             InstructionName::RETURNDATACOPY => {
                 let arguments = self
@@ -758,6 +754,14 @@ where
                     .try_into()
                     .expect("Always valid");
                 compiler_llvm_context::return_data::copy(context, arguments)
+            }
+            InstructionName::EXTCODESIZE => {
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::ext_code::size(context, arguments[0].into_int_value())
+            }
+            InstructionName::EXTCODEHASH => {
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::ext_code::hash(context, arguments[0].into_int_value())
             }
 
             InstructionName::RETURN => {
@@ -1031,10 +1035,6 @@ where
             InstructionName::EXTCODECOPY => {
                 let _arguments = self.pop_arguments_llvm(context);
                 Ok(None)
-            }
-            InstructionName::EXTCODEHASH => {
-                let _arguments = self.pop_arguments_llvm(context);
-                Ok(Some(context.field_const(0).as_basic_value_enum()))
             }
             InstructionName::SELFDESTRUCT => {
                 let _arguments = self.pop_arguments_llvm(context);
