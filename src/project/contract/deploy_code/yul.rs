@@ -1,26 +1,29 @@
 //!
-//! The `solc --standard-json` contract Yul source.
+//! The `solc --standard-json` contract Yul deploy code.
 //!
 
 use crate::yul::parser::statement::object::Object;
 
 ///
-/// The `solc --standard-json` contract Yul source.
+/// The `solc --standard-json` contract Yul deploy code.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Yul {
-    /// The Yul source code.
-    pub source: String,
     /// The Yul AST object.
     pub object: Object,
+    /// The runtime code hash. Must be set before compiling.
+    pub runtime_code_hash: Option<String>,
 }
 
 impl Yul {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(source: String, object: Object) -> Self {
-        Self { source, object }
+    pub fn new(object: Object) -> Self {
+        Self {
+            object,
+            runtime_code_hash: None,
+        }
     }
 }
 

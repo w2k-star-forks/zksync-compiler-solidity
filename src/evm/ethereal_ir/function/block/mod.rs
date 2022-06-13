@@ -110,8 +110,6 @@ where
     D: compiler_llvm_context::Dependency,
 {
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        context.set_code_type(self.key.code_type);
-
         for element in self.elements.into_iter() {
             element.into_llvm(context)?;
         }

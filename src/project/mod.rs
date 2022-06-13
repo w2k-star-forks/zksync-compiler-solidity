@@ -12,10 +12,8 @@ use std::sync::RwLock;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::dump_flag::DumpFlag;
-use crate::project::contract::source::Source;
 use crate::project::contract::state::State;
 use crate::yul::lexer::Lexer;
 use crate::yul::parser::statement::object::Object;
@@ -49,7 +47,7 @@ impl Project {
     ) -> Self {
         let mut identifier_paths = BTreeMap::new();
         for (path, contract) in contracts.iter() {
-            identifier_paths.insert(contract.identifier().to_owned(), path.to_owned());
+            identifier_paths.insert(contract.identifier.to_owned(), path.to_owned());
         }
 
         Self {
@@ -78,7 +76,7 @@ impl Project {
             .remove(contract_path)
             .expect("Always exists")
         {
-            ContractState::Source(mut contract) => {
+            ContractState::Source(contract) => {
                 let waiter = ContractState::waiter();
                 project_guard.contract_states.insert(
                     contract_path.to_owned(),
@@ -86,12 +84,8 @@ impl Project {
                 );
                 std::mem::drop(project_guard);
 
-                let identifier = contract.identifier().to_owned();
-                let abi = contract.abi.take();
                 match contract.compile(project.clone(), optimizer_settings, dump_flags) {
                     Ok(build) => {
-                        let build =
-                            ContractBuild::new(contract_path.to_owned(), identifier, build, abi);
                         project
                             .write()
                             .expect("Sync")
@@ -184,16 +178,14 @@ impl Project {
     pub fn try_from_default_yul(path: &Path, version: &semver::Version) -> anyhow::Result<Self> {
         let yul = std::fs::read_to_string(path)
             .map_err(|error| anyhow::anyhow!("Yul file {:?} reading error: {}", path, error))?;
-        let mut lexer = Lexer::new(yul.clone());
+        let mut lexer = Lexer::new(yul);
         let path = path.to_string_lossy().to_string();
         let object = Object::parse(&mut lexer, None)
             .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
 
         let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(
-            path.clone(),
-            Contract::new(path, Source::new_yul(yul, object), None),
-        );
+        let contract = Contract::try_from_yul(path.clone(), object, None)?;
+        project_contracts.insert(path, contract);
         Ok(Self::new(
             version.to_owned(),
             project_contracts,
@@ -213,10 +205,8 @@ impl Project {
             .map_err(|error| anyhow::anyhow!("Yul object `{}` parsing error: {}", path, error,))?;
 
         let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(
-            path.clone(),
-            Contract::new(path, Source::new_yul(yul.to_owned(), object), None),
-        );
+        let contract = Contract::try_from_yul(path.clone(), object, None)?;
+        project_contracts.insert(path, contract);
         Ok(Self::new(
             version.to_owned(),
             project_contracts,
@@ -247,7 +237,7 @@ impl compiler_llvm_context::Dependency for Project {
             .contract_states
             .get(contract_path.as_str())
         {
-            Some(ContractState::Build(build)) => Ok(build.build.hash.to_owned()),
+            Some(ContractState::Build(build)) => Ok(build.deploy_build.hash.to_owned()),
             Some(ContractState::Error(error)) => anyhow::bail!(
                 "Dependency contract `{}` compiling error: {}",
                 identifier,

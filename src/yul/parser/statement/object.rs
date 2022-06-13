@@ -105,34 +105,10 @@ where
     D: compiler_llvm_context::Dependency,
 {
     fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let mut entry = compiler_llvm_context::EntryFunction::default();
-        entry.declare(context)?;
-
-        compiler_llvm_context::DeployCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
-        )
-        .declare(context)?;
-        compiler_llvm_context::RuntimeCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
-        )
-        .declare(context)?;
-
-        entry.into_llvm(context)?;
-
-        Ok(())
+        self.code.declare(context)
     }
 
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        if self.identifier.ends_with("_deployed") {
-            compiler_llvm_context::RuntimeCodeFunction::new(self.code).into_llvm(context)?;
-        } else {
-            compiler_llvm_context::DeployCodeFunction::new(self.code).into_llvm(context)?;
-        }
-
-        if let Some(object) = self.inner_object {
-            object.into_llvm(context)?;
-        }
-
-        Ok(())
+        self.code.into_llvm(context)
     }
 }

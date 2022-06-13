@@ -11,9 +11,6 @@ use std::collections::HashSet;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::evm::ethereal_ir::entry_link::EntryLink;
-use crate::evm::ethereal_ir::EtherealIR;
-
 use self::data::Data;
 use self::instruction::name::Name as InstructionName;
 use self::instruction::Instruction;
@@ -33,12 +30,12 @@ pub struct Assembly {
     #[serde(rename = ".data")]
     pub data: Option<BTreeMap<String, Data>>,
 
-    /// The full contract path.
+    /// The deploy code factory dependency paths.
     #[serde(skip)]
-    pub full_path: Option<String>,
-    /// The factory dependency paths.
+    pub deploy_factory_dependencies: HashSet<String>,
+    /// The runtime code factory dependency paths.
     #[serde(skip)]
-    pub factory_dependencies: HashSet<String>,
+    pub runtime_factory_dependencies: HashSet<String>,
 }
 
 impl Assembly {
@@ -48,25 +45,6 @@ impl Assembly {
     pub fn keccak256(&self) -> String {
         let json = serde_json::to_vec(self).expect("Always valid");
         compiler_llvm_context::keccak256(json.as_slice())
-    }
-
-    ///
-    /// Sets the full contract path.
-    ///
-    pub fn set_full_path(&mut self, full_path: String) {
-        self.full_path = Some(full_path);
-    }
-
-    ///
-    /// Returns the full contract path if it is set, or `<undefined>` otherwise.
-    ///
-    /// # Panics
-    /// If the `full_path` has not been set.
-    ///
-    pub fn full_path(&self) -> &str {
-        self.full_path
-            .as_deref()
-            .unwrap_or_else(|| panic!("The full path of some contracts is unset"))
     }
 
     ///
@@ -100,7 +78,8 @@ impl Assembly {
                             .ok_or_else(|| {
                                 anyhow::anyhow!("Contract path not found for hash `{}`", hash)
                             })?;
-                    self.factory_dependencies.insert(full_path.to_owned());
+                    self.deploy_factory_dependencies
+                        .insert(full_path.to_owned());
 
                     let mut index_extended =
                         "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
@@ -153,7 +132,8 @@ impl Assembly {
                             .ok_or_else(|| {
                                 anyhow::anyhow!("Contract path not found for hash `{}`", hash)
                             })?;
-                    self.factory_dependencies.insert(full_path.to_owned());
+                    self.runtime_factory_dependencies
+                        .insert(full_path.to_owned());
 
                     let mut index_extended =
                         "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
@@ -171,89 +151,6 @@ impl Assembly {
         }
 
         Ok(index_path_mapping)
-    }
-}
-
-impl<D> compiler_llvm_context::WriteLLVM<D> for Assembly
-where
-    D: compiler_llvm_context::Dependency,
-{
-    fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let mut entry = compiler_llvm_context::EntryFunction::default();
-        entry.declare(context)?;
-
-        compiler_llvm_context::DeployCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
-        )
-        .declare(context)?;
-        compiler_llvm_context::RuntimeCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
-        )
-        .declare(context)?;
-
-        entry.into_llvm(context)?;
-
-        Ok(())
-    }
-
-    fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let full_path = self.full_path().to_owned();
-
-        if context.has_dump_flag(compiler_llvm_context::DumpFlag::EVM) {
-            println!("Contract `{}` deploy EVM:\n\n{}", full_path, self);
-        }
-        let deploy_code_blocks = EtherealIR::get_blocks(
-            context.evm().version.to_owned(),
-            compiler_llvm_context::CodeType::Deploy,
-            self.code
-                .as_deref()
-                .ok_or_else(|| anyhow::anyhow!("Deploy code instructions not found"))?,
-        )?;
-
-        let data = self
-            .data
-            .ok_or_else(|| anyhow::anyhow!("Runtime code data not found"))?
-            .remove("0")
-            .expect("Always exists");
-        if context.has_dump_flag(compiler_llvm_context::DumpFlag::EVM) {
-            println!("Contract `{}` runtime EVM:\n\n{}", full_path, data);
-        };
-        let runtime_code_instructions = match data {
-            Data::Assembly(assembly) => assembly
-                .code
-                .ok_or_else(|| anyhow::anyhow!("Runtime code instructions not found"))?,
-            Data::Hash(hash) => {
-                anyhow::bail!("Expected runtime code instructions, found hash `{}`", hash)
-            }
-            Data::Path(path) => {
-                anyhow::bail!("Expected runtime code instructions, found path `{}`", path)
-            }
-        };
-        let runtime_code_blocks = EtherealIR::get_blocks(
-            context.evm().version.to_owned(),
-            compiler_llvm_context::CodeType::Runtime,
-            runtime_code_instructions.as_slice(),
-        )?;
-
-        let mut blocks = deploy_code_blocks;
-        blocks.extend(runtime_code_blocks);
-        let mut ethereal_ir = EtherealIR::new(context.evm().version.to_owned(), blocks)?;
-        if context.has_dump_flag(compiler_llvm_context::DumpFlag::EthIR) {
-            println!("Contract `{}` Ethereal IR:\n\n{}", full_path, ethereal_ir);
-        }
-        ethereal_ir.declare(context)?;
-        ethereal_ir.into_llvm(context)?;
-
-        compiler_llvm_context::DeployCodeFunction::new(EntryLink::new(
-            compiler_llvm_context::CodeType::Deploy,
-        ))
-        .into_llvm(context)?;
-        compiler_llvm_context::RuntimeCodeFunction::new(EntryLink::new(
-            compiler_llvm_context::CodeType::Runtime,
-        ))
-        .into_llvm(context)?;
-
-        Ok(())
     }
 }
 

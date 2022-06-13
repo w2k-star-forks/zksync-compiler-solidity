@@ -14,7 +14,6 @@ use serde::Serialize;
 use crate::dump_flag::DumpFlag;
 use crate::evm::assembly::instruction::Instruction;
 use crate::evm::assembly::Assembly;
-use crate::project::contract::source::Source as ProjectContractSource;
 use crate::project::contract::Contract as ProjectContract;
 use crate::project::Project;
 use crate::solc::pipeline::Pipeline as SolcPipeline;
@@ -76,7 +75,7 @@ impl Output {
             for (name, contract) in contracts.iter_mut() {
                 let full_path = format!("{}:{}", path, name);
 
-                let source = match pipeline {
+                let project_contract = match pipeline {
                     SolcPipeline::Yul => {
                         let ir_optimized = match contract.ir_optimized.to_owned() {
                             Some(ir_optimized) => ir_optimized,
@@ -91,12 +90,16 @@ impl Output {
                             println!("{}", ir_optimized);
                         }
 
-                        let mut lexer = Lexer::new(ir_optimized.clone());
+                        let mut lexer = Lexer::new(ir_optimized);
                         let object = Object::parse(&mut lexer, None).map_err(|error| {
                             anyhow::anyhow!("Contract `{}` parsing error: {:?}", full_path, error)
                         })?;
 
-                        ProjectContractSource::new_yul(ir_optimized, object)
+                        ProjectContract::try_from_yul(
+                            full_path.clone(),
+                            object,
+                            contract.abi.take(),
+                        )
                     }
                     SolcPipeline::EVM => {
                         let assembly =
@@ -105,12 +108,16 @@ impl Output {
                                 None => continue,
                             };
 
-                        ProjectContractSource::new_evm(assembly)
+                        ProjectContract::try_from_evm(
+                            full_path.clone(),
+                            &version,
+                            assembly,
+                            contract.abi.take(),
+                            dump_flags,
+                        )
                     }
-                };
+                }?;
 
-                let project_contract =
-                    ProjectContract::new(full_path.clone(), source, contract.abi.take());
                 project_contracts.insert(full_path, project_contract);
             }
         }
@@ -172,8 +179,6 @@ impl Output {
         assembly: &mut Assembly,
         hash_path_mapping: &BTreeMap<String, String>,
     ) -> anyhow::Result<()> {
-        assembly.set_full_path(full_path.to_owned());
-
         let deploy_code_index_path_mapping =
             assembly.deploy_dependencies_pass(full_path, hash_path_mapping)?;
         if let Some(deploy_code_instructions) = assembly.code.as_deref_mut() {

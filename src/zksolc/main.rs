@@ -194,15 +194,32 @@ fn main_inner() -> anyhow::Result<()> {
         for (path, contract) in build.contracts.into_iter() {
             if arguments.output_assembly {
                 println!(
-                    "Contract `{}` assembly:\n\n{}",
-                    path, contract.build.assembly_text
+                    "Contract `{}` {} code assembly:\n\n{}",
+                    path,
+                    compiler_llvm_context::CodeType::Deploy,
+                    contract.deploy_build.assembly_text
+                );
+
+                println!(
+                    "Contract `{}` {} code assembly:\n\n{}",
+                    path,
+                    compiler_llvm_context::CodeType::Runtime,
+                    contract.runtime_build.assembly_text
                 );
             }
             if arguments.output_binary {
                 println!(
-                    "Contract `{}` bytecode: 0x{}",
+                    "Contract `{}` {} code bytecode: 0x{}",
                     path,
-                    hex::encode(contract.build.bytecode)
+                    compiler_llvm_context::CodeType::Deploy,
+                    hex::encode(contract.deploy_build.bytecode)
+                );
+
+                println!(
+                    "Contract `{}` {} code bytecode: 0x{}",
+                    path,
+                    compiler_llvm_context::CodeType::Runtime,
+                    hex::encode(contract.runtime_build.bytecode)
                 );
             }
         }

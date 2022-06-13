@@ -25,9 +25,12 @@ pub struct Contract {
     /// The `solc` hexadecimal binary runtime part output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bin_runtime: Option<String>,
-    /// The factory dependencies.
+    /// The deploy factory dependencies.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub factory_deps: Option<BTreeMap<String, String>>,
+    pub deploy_factory_deps: Option<BTreeMap<String, String>>,
+    /// The runtime factory dependencies.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runtime_factory_deps: Option<BTreeMap<String, String>>,
 }
 
 impl Contract {

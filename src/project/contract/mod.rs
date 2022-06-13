@@ -2,63 +2,166 @@
 //! The contract data representation.
 //!
 
-pub mod source;
+pub mod deploy_code;
+pub mod runtime_code;
 pub mod state;
 
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use compiler_llvm_context::WriteLLVM;
-
+use crate::build::contract::Contract as ContractBuild;
 use crate::dump_flag::DumpFlag;
+use crate::evm::assembly::data::Data as AssemblyData;
+use crate::evm::assembly::Assembly;
+use crate::evm::ethereal_ir::EtherealIR;
 use crate::project::Project;
+use crate::yul::parser::statement::object::Object;
 
-use self::source::Source;
-use self::state::State;
+use self::deploy_code::DeployCode;
+use self::runtime_code::RuntimeCode;
 
 ///
 /// The contract data representation.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Contract {
     /// The absolute file path.
     pub path: String,
-    /// The source code data.
-    pub source: Source,
+    /// The auxiliary contract identifier. Used to identify Yul objects.
+    pub identifier: String,
+    /// The deploy code data.
+    pub deploy_code: DeployCode,
+    /// The runtime code data.
+    pub runtime_code: RuntimeCode,
     /// The ABI specification JSON.
     pub abi: Option<serde_json::Value>,
 }
 
 impl Contract {
     ///
-    /// A shortcut constructor.
+    /// A shortcut constructor for Yul.
     ///
-    pub fn new(path: String, source: Source, abi: Option<serde_json::Value>) -> Self {
-        Self { path, source, abi }
+    pub fn try_from_yul(
+        path: String,
+        object: Object,
+        abi: Option<serde_json::Value>,
+    ) -> anyhow::Result<Self> {
+        let mut deploy_object = object;
+        let runtime_object = *deploy_object
+            .inner_object
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("The runtime object must be always"))?;
+
+        let identifier = deploy_object.identifier.clone();
+
+        let deploy_code = DeployCode::new_yul(deploy_object);
+        let runtime_code = RuntimeCode::new_yul(runtime_object);
+
+        Ok(Self {
+            path,
+            identifier,
+            deploy_code,
+            runtime_code,
+            abi,
+        })
     }
 
     ///
-    /// Returns the contract identifier, which is:
-    /// - the Yul object identifier for Yul
-    /// - the full contract path for EVM
+    /// A shortcut constructor for the EVM legacy assembly.
     ///
-    pub fn identifier(&self) -> &str {
-        match self.source {
-            Source::Yul(ref yul) => yul.object.identifier.as_str(),
-            Source::EVM(ref evm) => evm.assembly.full_path(),
+    pub fn try_from_evm(
+        path: String,
+        version: &semver::Version,
+        assembly: Assembly,
+        abi: Option<serde_json::Value>,
+        dump_flags: &[DumpFlag],
+    ) -> anyhow::Result<Self> {
+        if dump_flags.contains(&DumpFlag::EVM) {
+            println!(
+                "Contract `{}` {} code EVM:\n\n{}",
+                compiler_llvm_context::CodeType::Deploy,
+                path,
+                assembly
+            );
         }
-    }
+        let deploy_code_blocks = EtherealIR::get_blocks(
+            version.to_owned(),
+            compiler_llvm_context::CodeType::Deploy,
+            assembly
+                .code
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("Deploy code instructions not found"))?,
+        )?;
 
-    ///
-    /// Extract factory dependencies.
-    ///
-    pub fn drain_factory_dependencies(&mut self) -> HashSet<String> {
-        match self.source {
-            Source::Yul(ref mut yul) => yul.object.factory_dependencies.drain(),
-            Source::EVM(ref mut evm) => evm.assembly.factory_dependencies.drain(),
+        let data = assembly
+            .data
+            .ok_or_else(|| anyhow::anyhow!("Runtime code data not found"))?
+            .remove("0")
+            .expect("Always exists");
+        if dump_flags.contains(&DumpFlag::EVM) {
+            println!(
+                "Contract `{}` {} code EVM:\n\n{}",
+                path,
+                compiler_llvm_context::CodeType::Runtime,
+                data
+            );
+        };
+        let runtime_code_instructions = match data {
+            AssemblyData::Assembly(assembly) => assembly
+                .code
+                .ok_or_else(|| anyhow::anyhow!("Runtime code instructions not found"))?,
+            AssemblyData::Hash(hash) => {
+                anyhow::bail!("Expected runtime code instructions, found hash `{}`", hash)
+            }
+            AssemblyData::Path(path) => {
+                anyhow::bail!("Expected runtime code instructions, found path `{}`", path)
+            }
+        };
+        let runtime_code_blocks = EtherealIR::get_blocks(
+            version.to_owned(),
+            compiler_llvm_context::CodeType::Runtime,
+            runtime_code_instructions.as_slice(),
+        )?;
+
+        let deploy_ethereal_ir = EtherealIR::new(
+            version.to_owned(),
+            path.clone(),
+            deploy_code_blocks,
+            assembly.deploy_factory_dependencies,
+        )?;
+        if dump_flags.contains(&DumpFlag::EthIR) {
+            println!(
+                "Contract `{}` {} code Ethereal IR:\n\n{}",
+                path,
+                compiler_llvm_context::CodeType::Deploy,
+                deploy_ethereal_ir
+            );
         }
-        .collect()
+        let deploy_code = DeployCode::new_evm(deploy_ethereal_ir);
+
+        let runtime_ethereal_ir = EtherealIR::new(
+            version.to_owned(),
+            path.clone(),
+            runtime_code_blocks,
+            assembly.runtime_factory_dependencies,
+        )?;
+        if dump_flags.contains(&DumpFlag::EthIR) {
+            println!(
+                "Contract `{}` {} code Ethereal IR:\n\n{}",
+                path,
+                compiler_llvm_context::CodeType::Runtime,
+                runtime_ethereal_ir
+            );
+        }
+        let runtime_code = RuntimeCode::new_evm(runtime_ethereal_ir);
+
+        Ok(Self {
+            path: path.clone(),
+            identifier: path,
+            deploy_code,
+            runtime_code,
+            abi,
+        })
     }
 
     ///
@@ -69,94 +172,25 @@ impl Contract {
         project: Arc<RwLock<Project>>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         dump_flags: Vec<DumpFlag>,
-    ) -> anyhow::Result<compiler_llvm_context::Build> {
-        let llvm = inkwell::context::Context::create();
-        let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings)?;
-        let dump_flags = compiler_llvm_context::DumpFlag::initialize(
-            dump_flags.contains(&DumpFlag::Yul),
-            dump_flags.contains(&DumpFlag::EthIR),
-            dump_flags.contains(&DumpFlag::EVM),
-            false,
-            dump_flags.contains(&DumpFlag::LLVM),
-            dump_flags.contains(&DumpFlag::Assembly),
-        );
-        let mut context = match self.source {
-            Source::Yul(_) => compiler_llvm_context::Context::new(
-                &llvm,
-                self.path.as_str(),
-                optimizer,
-                Some(project.clone()),
-                dump_flags,
-            ),
-            Source::EVM(_) => {
-                let version = project.read().expect("Sync").version.to_owned();
-                compiler_llvm_context::Context::new_evm(
-                    &llvm,
-                    self.path.as_str(),
-                    optimizer,
-                    Some(project.clone()),
-                    dump_flags,
-                    compiler_llvm_context::ContextEVMData::new(version),
-                )
-            }
-        };
+    ) -> anyhow::Result<ContractBuild> {
+        let runtime_build = self.runtime_code.compile(
+            project.clone(),
+            optimizer_settings.clone(),
+            dump_flags.as_slice(),
+        )?;
 
-        let factory_dependencies = self.drain_factory_dependencies();
+        self.deploy_code
+            .set_runtime_code_hash(runtime_build.hash.clone());
+        let deploy_build =
+            self.deploy_code
+                .compile(project, optimizer_settings, dump_flags.as_slice())?;
 
-        self.source.declare(&mut context).map_err(|error| {
-            anyhow::anyhow!(
-                "The contract `{}` LLVM IR generator declaration pass error: {}",
-                self.path,
-                error
-            )
-        })?;
-        self.source.into_llvm(&mut context).map_err(|error| {
-            anyhow::anyhow!(
-                "The contract `{}` LLVM IR generator definition pass error: {}",
-                self.path,
-                error
-            )
-        })?;
-
-        let mut build = context.build(self.path.as_str())?;
-        for dependency in factory_dependencies.into_iter() {
-            let full_path = project
-                .read()
-                .expect("Sync")
-                .identifier_paths
-                .get(dependency.as_str())
-                .cloned()
-                .unwrap_or_else(|| panic!("Dependency `{}` full path not found", dependency));
-            let hash = match project
-                .read()
-                .expect("Sync")
-                .contract_states
-                .get(full_path.as_str())
-            {
-                Some(State::Build(build)) => build.build.hash.to_owned(),
-                Some(_) => {
-                    panic!("Dependency `{}` must be built at this point", full_path)
-                }
-                None => anyhow::bail!(
-                    "Dependency contract `{}` not found in the project",
-                    full_path
-                ),
-            };
-            build.factory_dependencies.insert(hash, full_path);
-        }
-        Ok(build)
-    }
-}
-
-impl<D> WriteLLVM<D> for Contract
-where
-    D: compiler_llvm_context::Dependency,
-{
-    fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        self.source.declare(context)
-    }
-
-    fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        self.source.into_llvm(context)
+        Ok(ContractBuild::new(
+            self.path,
+            self.identifier,
+            deploy_build,
+            runtime_build,
+            self.abi,
+        ))
     }
 }

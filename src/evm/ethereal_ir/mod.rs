@@ -2,7 +2,6 @@
 //! The Ethereal IR representation of the EVM bytecode.
 //!
 
-pub mod entry_link;
 pub mod function;
 
 use std::collections::HashMap;
@@ -20,8 +19,12 @@ use self::function::Function;
 pub struct EtherealIR {
     /// The Solidity compiler version.
     pub solc_version: semver::Version,
+    /// The contract full path.
+    pub full_path: String,
     /// The all-inlined function representation.
     pub function: Function,
+    /// The factory dependencies.
+    pub factory_dependencies: HashSet<String>,
 }
 
 impl EtherealIR {
@@ -39,14 +42,18 @@ impl EtherealIR {
     ///
     pub fn new(
         solc_version: semver::Version,
+        full_path: String,
         blocks: HashMap<compiler_llvm_context::FunctionBlockKey, Block>,
+        factory_dependencies: HashSet<String>,
     ) -> anyhow::Result<Self> {
         let mut visited = HashSet::with_capacity(blocks.len());
         let function = Function::new(solc_version.clone(), &blocks, &mut visited)?;
 
         Ok(Self {
             solc_version,
+            full_path,
             function,
+            factory_dependencies,
         })
     }
 

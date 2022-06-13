@@ -26,10 +26,18 @@ pub struct Contract {
     /// Contract's bytecode and related objects
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub evm: Option<EVM>,
+
+    /// The contract's zkEVM deploy bytecode hash.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deploy_hash: Option<String>,
     /// The contracts factory dependencies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub factory_dependencies: Option<BTreeMap<String, String>>,
-    /// The contract's zkEVM bytecode hash.
+    pub deploy_factory_dependencies: Option<BTreeMap<String, String>>,
+
+    /// The contract's zkEVM deploy bytecode hash.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub hash: Option<String>,
+    pub runtime_hash: Option<String>,
+    /// The contracts factory dependencies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runtime_factory_dependencies: Option<BTreeMap<String, String>>,
 }

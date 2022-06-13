@@ -1,26 +1,26 @@
 //!
-//! The `solc --standard-json` contract EVM legacy assembly source.
+//! The `solc --standard-json` contract runtime code EVM legacy assembly.
 //!
 
-use crate::evm::assembly::Assembly;
+use crate::evm::ethereal_ir::EtherealIR;
 
 ///
-/// The `solc --standard-json` contract EVM legacy assembly source.
+/// The `solc --standard-json` contract runtime code EVM legacy assembly.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct EVM {
-    /// The EVM legacy assembly source code.
-    pub assembly: Assembly,
+    /// The EVM legacy assembly Ethereal IR.
+    pub ethereal_ir: EtherealIR,
 }
 
 impl EVM {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(assembly: Assembly) -> Self {
-        Self { assembly }
+    pub fn new(ethereal_ir: EtherealIR) -> Self {
+        Self { ethereal_ir }
     }
 }
 
@@ -29,10 +29,10 @@ where
     D: compiler_llvm_context::Dependency,
 {
     fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        self.assembly.declare(context)
+        self.ethereal_ir.declare(context)
     }
 
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        self.assembly.into_llvm(context)
+        self.ethereal_ir.into_llvm(context)
     }
 }
