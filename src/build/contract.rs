@@ -7,6 +7,8 @@ use std::io::Write;
 use std::path::Path;
 
 use crate::solc::combined_json::contract::Contract as CombinedJsonContract;
+use crate::solc::standard_json::output::contract::evm::EVM as StandardJsonOutputContractEVM;
+use crate::solc::standard_json::output::contract::Contract as StandardJsonOutputContract;
 
 ///
 /// The Solidity contract build.
@@ -154,7 +156,27 @@ impl Contract {
             (None, None) => {}
         }
 
+        combined_json_contract.abi = self.abi;
         combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
+
+        Ok(())
+    }
+
+    ///
+    /// Writes the contract text assembly and bytecode to the standard JSON.
+    ///
+    pub fn write_to_standard_json(
+        self,
+        standard_json_contract: &mut StandardJsonOutputContract,
+    ) -> anyhow::Result<()> {
+        let bytecode = hex::encode(self.build.bytecode.as_slice());
+
+        standard_json_contract.ir_optimized = None;
+        standard_json_contract.abi = self.abi;
+        standard_json_contract.evm =
+            Some(StandardJsonOutputContractEVM::new_zkevm_bytecode(bytecode));
+        standard_json_contract.factory_dependencies = Some(self.build.factory_dependencies);
+        standard_json_contract.hash = Some(self.build.hash);
 
         Ok(())
     }

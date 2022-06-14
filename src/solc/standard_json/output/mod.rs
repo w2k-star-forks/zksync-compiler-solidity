@@ -78,7 +78,7 @@ impl Output {
 
                 let source = match pipeline {
                     SolcPipeline::Yul => {
-                        let ir_optimized = match contract.ir_optimized.to_owned() {
+                        let ir_optimized = match contract.ir_optimized.take() {
                             Some(ir_optimized) => ir_optimized,
                             None => continue,
                         };
