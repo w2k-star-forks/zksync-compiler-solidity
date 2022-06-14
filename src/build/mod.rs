@@ -8,7 +8,6 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::solc::combined_json::CombinedJson;
-use crate::solc::standard_json::output::contract::evm::EVM as StandardJsonOutputContractEVM;
 use crate::solc::standard_json::output::Output as StandardJsonOutput;
 
 use self::contract::Contract;
@@ -87,22 +86,7 @@ impl Build {
                 let full_name = format!("{}:{}", path, name);
 
                 if let Some(contract_data) = self.contracts.remove(full_name.as_str()) {
-                    let deploy_bytecode = hex::encode(contract_data.deploy_build.bytecode);
-                    let runtime_bytecode = hex::encode(contract_data.runtime_build.bytecode);
-
-                    contract.ir_optimized = None;
-                    contract.evm = Some(StandardJsonOutputContractEVM::new_zkevm_bytecode(
-                        deploy_bytecode,
-                        runtime_bytecode,
-                    ));
-
-                    contract.deploy_hash = Some(contract_data.deploy_build.hash);
-                    contract.deploy_factory_dependencies =
-                        Some(contract_data.deploy_build.factory_dependencies);
-
-                    contract.runtime_hash = Some(contract_data.runtime_build.hash);
-                    contract.runtime_factory_dependencies =
-                        Some(contract_data.runtime_build.factory_dependencies);
+                    contract_data.write_to_standard_json(contract)?;
                 }
             }
         }

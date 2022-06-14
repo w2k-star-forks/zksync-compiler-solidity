@@ -112,7 +112,7 @@ where
                 .functions
                 .get(self.name.as_str())
                 .cloned()
-                .ok_or_else(|| anyhow::anyhow!("Entry not found"))?;
+                .expect("Always exists");
             let pointer = function
                 .value
                 .get_first_param()

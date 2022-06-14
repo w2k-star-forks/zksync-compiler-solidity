@@ -7,6 +7,8 @@ use std::io::Write;
 use std::path::Path;
 
 use crate::solc::combined_json::contract::Contract as CombinedJsonContract;
+use crate::solc::standard_json::output::contract::evm::EVM as StandardJsonOutputContractEVM;
+use crate::solc::standard_json::output::contract::Contract as StandardJsonOutputContract;
 
 ///
 /// The Solidity contract build.
@@ -203,8 +205,38 @@ impl Contract {
         combined_json_contract.bin = Some(hex::encode(self.deploy_build.bytecode));
         combined_json_contract.bin_runtime = Some(hex::encode(self.runtime_build.bytecode));
 
+        combined_json_contract.abi = self.abi;
+
         combined_json_contract.deploy_factory_deps = Some(self.deploy_build.factory_dependencies);
         combined_json_contract.runtime_factory_deps = Some(self.runtime_build.factory_dependencies);
+
+        Ok(())
+    }
+
+    ///
+    /// Writes the contract text assembly and bytecode to the standard JSON.
+    ///
+    pub fn write_to_standard_json(
+        self,
+        standard_json_contract: &mut StandardJsonOutputContract,
+    ) -> anyhow::Result<()> {
+        let deploy_bytecode = hex::encode(self.deploy_build.bytecode);
+        let runtime_bytecode = hex::encode(self.runtime_build.bytecode);
+
+        standard_json_contract.ir_optimized = None;
+        standard_json_contract.abi = self.abi;
+        standard_json_contract.evm = Some(StandardJsonOutputContractEVM::new_zkevm_bytecode(
+            deploy_bytecode,
+            runtime_bytecode,
+        ));
+
+        standard_json_contract.deploy_hash = Some(self.deploy_build.hash);
+        standard_json_contract.deploy_factory_dependencies =
+            Some(self.deploy_build.factory_dependencies);
+
+        standard_json_contract.runtime_hash = Some(self.runtime_build.hash);
+        standard_json_contract.runtime_factory_dependencies =
+            Some(self.runtime_build.factory_dependencies);
 
         Ok(())
     }

@@ -151,8 +151,13 @@ where
                             .function_mut()
                             .stack
                             .get(binding.name.as_str())
-                            .cloned()
-                            .expect("Always exists");
+                            .copied()
+                            .ok_or_else(|| {
+                                anyhow::anyhow!(
+                                    "Assignment to an undeclared variable `{}`",
+                                    binding.name
+                                )
+                            })?;
                         context.build_store(pointer, value);
                     }
                 }
