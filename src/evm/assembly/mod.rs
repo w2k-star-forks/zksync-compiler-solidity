@@ -90,6 +90,9 @@ impl Assembly {
                 continue;
             }
 
+            let mut index_extended = "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
+            index_extended.push_str(index.as_str());
+
             *data = match data {
                 Data::Assembly(assembly) => {
                     let hash = assembly.keccak256();
@@ -102,15 +105,11 @@ impl Assembly {
                             })?;
                     self.factory_dependencies.insert(full_path.to_owned());
 
-                    let mut index_extended =
-                        "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
-                    index_extended.push_str(index.as_str());
                     index_path_mapping.insert(index_extended, full_path.clone());
-
                     Data::Path(full_path)
                 }
                 Data::Hash(hash) => {
-                    index_path_mapping.insert(index.to_owned(), hash.to_owned());
+                    index_path_mapping.insert(index_extended, hash.to_owned());
                     continue;
                 }
                 _ => continue,
@@ -143,6 +142,9 @@ impl Assembly {
             None => return Ok(index_path_mapping),
         };
         for (index, data) in dependencies.iter_mut() {
+            let mut index_extended = "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
+            index_extended.push_str(index.as_str());
+
             *data = match data {
                 Data::Assembly(assembly) => {
                     let hash = assembly.keccak256();
@@ -155,15 +157,11 @@ impl Assembly {
                             })?;
                     self.factory_dependencies.insert(full_path.to_owned());
 
-                    let mut index_extended =
-                        "0".repeat(compiler_common::SIZE_FIELD * 2 - index.len());
-                    index_extended.push_str(index.as_str());
                     index_path_mapping.insert(index_extended, full_path.clone());
-
                     Data::Path(full_path)
                 }
                 Data::Hash(hash) => {
-                    index_path_mapping.insert(index.to_owned(), hash.to_owned());
+                    index_path_mapping.insert(index_extended, hash.to_owned());
                     continue;
                 }
                 _ => continue,

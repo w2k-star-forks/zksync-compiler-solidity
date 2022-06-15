@@ -262,15 +262,29 @@ impl Instruction {
         mapping: &BTreeMap<String, String>,
     ) -> anyhow::Result<()> {
         for instruction in instructions.iter_mut() {
-            if let Instruction {
-                name: Name::PUSH_ContractHash | Name::PUSH_ContractHashSize | Name::PUSH_Data,
-                value: Some(value),
-            } = instruction
-            {
-                *value = mapping
-                    .get(value.as_str())
-                    .cloned()
-                    .ok_or_else(|| anyhow::anyhow!("Alias `{}` data not found", value))?;
+            match instruction {
+                Instruction {
+                    name: Name::PUSH_ContractHash | Name::PUSH_ContractHashSize,
+                    value: Some(value),
+                } => {
+                    *value = mapping
+                        .get(value.as_str())
+                        .cloned()
+                        .ok_or_else(|| anyhow::anyhow!("Alias `{}` data not found", value))?;
+                }
+                Instruction {
+                    name: Name::PUSH_Data,
+                    value: Some(value),
+                } => {
+                    let mut key_extended =
+                        "0".repeat(compiler_common::SIZE_FIELD * 2 - value.len());
+                    key_extended.push_str(value.as_str());
+
+                    *value = mapping.get(key_extended.as_str()).cloned().ok_or_else(|| {
+                        anyhow::anyhow!("Alias `{}` data not found", key_extended)
+                    })?;
+                }
+                _ => {}
             }
         }
 
