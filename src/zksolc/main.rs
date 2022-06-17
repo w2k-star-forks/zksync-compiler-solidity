@@ -44,10 +44,10 @@ fn main_inner() -> anyhow::Result<()> {
         }));
     let solc_version = solc.version()?;
 
-    let pipeline = if solc_version.minor >= 8 {
-        compiler_solidity::SolcPipeline::Yul
-    } else {
+    let pipeline = if solc_version.minor < 8 || arguments.force_evmla {
         compiler_solidity::SolcPipeline::EVM
+    } else {
+        compiler_solidity::SolcPipeline::Yul
     };
 
     compiler_llvm_context::initialize_target();

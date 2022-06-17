@@ -84,6 +84,10 @@ pub struct Arguments {
     #[structopt(long = "yul")]
     pub yul: bool,
 
+    /// Sets the EVM legacy assembly pipeline forcibly.
+    #[structopt(long = "force-evmla")]
+    pub force_evmla: bool,
+
     /// Output ABI specification of the contracts.
     #[structopt(long = "abi")]
     pub output_abi: bool,
