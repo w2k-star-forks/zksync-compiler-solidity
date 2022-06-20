@@ -31,8 +31,8 @@ md5 = "0.7"
 
 zkevm-assembly = { git = "ssh://git@github.com/matter-labs/zkEVM-assembly", branch = "v1.1.1" }
 
-compiler-common = { git = "ssh://git@github.com/matter-labs/compiler-common", branch = "az/vm-v1.1" }
-compiler-llvm-context = { git = "ssh://git@github.com/matter-labs/compiler-llvm-context", branch = "az/vm-v1.1" }
+compiler-common = { git = "ssh://git@github.com/matter-labs/compiler-common" }
+compiler-llvm-context = { git = "ssh://git@github.com/matter-labs/compiler-llvm-context" }
 
 #compiler-common = { path = "../compiler-common" }
 #compiler-llvm-context = { path = "../compiler-llvm-context" }

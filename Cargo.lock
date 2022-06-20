@@ -122,12 +122,12 @@ dependencies = [
 [[package]]
 name = "compiler-common"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-common?branch=az/vm-v1.1#5315746b649121ac63653012bc7ed898735d0c1d"
+source = "git+ssh://git@github.com/matter-labs/compiler-common#845cea0cdeaf895c8d7134d84e4d2b1d7c06e105"
 
 [[package]]
 name = "compiler-llvm-context"
 version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context?branch=az/vm-v1.1#0e2325d19d4852afa21f3b7d1b076075e0fd0def"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#d7e39dbd15db48a525d0e2118d149b529d440ae4"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -728,18 +728,18 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.39"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c54b25569025b7fc9651de43004ae593a75ad88543b17178aa5e1b9c4f15f56f"
+checksum = "dd96a1e8ed2596c337f8eae5f24924ec83f5ad5ab21ea8e455d3566c69fbcaf7"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.19"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f53dc8cf16a769a6f677e09e7ff2cd4be1ea0f48754aac39520536962011de0d"
+checksum = "3bcdf212e9776fbcb2d23ab029360416bb1706b1aea2d1a5ba002727cbcab804"
 dependencies = [
  "proc-macro2",
 ]
