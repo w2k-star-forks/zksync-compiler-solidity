@@ -421,7 +421,7 @@ impl FunctionCall {
             Name::Invalid => compiler_llvm_context::r#return::invalid(context),
 
             Name::Log0 => {
-                let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
+                let arguments = self.pop_arguments_llvm_log::<D, 2>(context)?;
                 compiler_llvm_context::event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -430,7 +430,7 @@ impl FunctionCall {
                 )
             }
             Name::Log1 => {
-                let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
+                let arguments = self.pop_arguments_llvm_log::<D, 3>(context)?;
                 compiler_llvm_context::event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -442,7 +442,7 @@ impl FunctionCall {
                 )
             }
             Name::Log2 => {
-                let arguments = self.pop_arguments_llvm::<D, 4>(context)?;
+                let arguments = self.pop_arguments_llvm_log::<D, 4>(context)?;
                 compiler_llvm_context::event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -454,7 +454,7 @@ impl FunctionCall {
                 )
             }
             Name::Log3 => {
-                let arguments = self.pop_arguments_llvm::<D, 5>(context)?;
+                let arguments = self.pop_arguments_llvm_log::<D, 5>(context)?;
                 compiler_llvm_context::event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -466,7 +466,7 @@ impl FunctionCall {
                 )
             }
             Name::Log4 => {
-                let arguments = self.pop_arguments_llvm::<D, 6>(context)?;
+                let arguments = self.pop_arguments_llvm_log::<D, 6>(context)?;
                 compiler_llvm_context::event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -916,6 +916,28 @@ impl FunctionCall {
         for expression in self.arguments.drain(0..N) {
             arguments.push(expression.into_llvm(context)?.expect("Always exists"));
         }
+
+        Ok(arguments.try_into().expect("Always successful"))
+    }
+
+    ///
+    /// Pops the specified number of arguments, converted into their LLVM values.
+    ///
+    /// This function inverts the order of event topics, taking into account its behavior in EVM.
+    ///
+    fn pop_arguments_llvm_log<'ctx, D, const N: usize>(
+        &mut self,
+        context: &mut compiler_llvm_context::Context<'ctx, D>,
+    ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
+    where
+        D: compiler_llvm_context::Dependency,
+    {
+        self.arguments[2..].reverse();
+        let mut arguments = Vec::with_capacity(N);
+        for expression in self.arguments.drain(0..N) {
+            arguments.push(expression.into_llvm(context)?.expect("Always exists").value);
+        }
+        arguments[2..].reverse();
 
         Ok(arguments.try_into().expect("Always successful"))
     }
