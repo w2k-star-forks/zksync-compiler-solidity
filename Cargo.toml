@@ -1,43 +1,5 @@
-[package]
-name = "compiler-solidity"
-version = "1.1.1"
-authors = [
-    "Alex Zarudnyy <a.zarudnyy@matterlabs.dev>",
+[workspace]
+members = [
+    "compiler_solidity",
+    "llvm_builder",
 ]
-license = "Apache-2.0"
-edition = "2021"
-description = "The zkEVM Solidity compiler"
-
-[[bin]]
-name = "zksolc"
-path = "src/zksolc/main.rs"
-
-[dependencies]
-structopt = { version = "0.3", default-features = false }
-shell-words = "1.1"
-colored = "2.0"
-anyhow = "1.0"
-
-rayon = "1.5"
-
-serde = { version = "1.0", "features" = [ "derive" ] }
-serde_json = "1.0"
-rand = "0.8"
-regex = "1.5"
-semver = "1.0"
-hex = "0.4"
-num = "0.4"
-md5 = "0.7"
-
-zkevm-assembly = { git = "ssh://git@github.com/matter-labs/zkEVM-assembly", branch = "v1.1.1" }
-
-compiler-common = { git = "ssh://git@github.com/matter-labs/compiler-common" }
-compiler-llvm-context = { git = "ssh://git@github.com/matter-labs/compiler-llvm-context" }
-
-#compiler-common = { path = "../compiler-common" }
-#compiler-llvm-context = { path = "../compiler-llvm-context" }
-
-[dependencies.inkwell]
-git = "ssh://git@github.com/matter-labs-forks/inkwell"
-default-features = false
-features = ["llvm13-0", "target-syncvm"]

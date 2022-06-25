@@ -4,6 +4,9 @@ rustflags = [
 ]
 incremental = true
 
+[env]
+LLVM_SYS_130_PREFIX = { value = "./llvm_build/", relative = true }
+
 [tools.clippy]
 warn = [
     "missing_docs_in_private_items",

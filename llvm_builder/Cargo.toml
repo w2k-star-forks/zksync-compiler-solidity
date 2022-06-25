@@ -1,0 +1,13 @@
+[package]
+name = "llvm-builder"
+version = "1.0.0"
+authors = [
+    "Alex Zarudnyy <a.zarudnyy@matterlabs.dev>",
+]
+license = "Apache-2.0"
+edition = "2021"
+description = "The LLVM framework dependency builder"
+
+[[bin]]
+name = "llvm-builder"
+path = "main.rs"
