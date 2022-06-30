@@ -8,6 +8,21 @@ use std::process::Command;
 /// The entry.
 ///
 fn main() {
+    let llvm_tag = format!("v{}", env!("CARGO_PKG_VERSION"));
+    let status = Command::new("git")
+        .args(&[
+            "clone",
+            "--branch",
+            llvm_tag.as_str(),
+            "ssh://git@github.com/matter-labs/compiler-llvm",
+            "./compiler-llvm",
+        ])
+        .status()
+        .expect("LLVM cloning process error");
+    if !status.success() {
+        panic!("LLVM cloning error");
+    }
+
     let status = Command::new("cmake")
         .args(&[
             "-S",

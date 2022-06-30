@@ -1,4 +1,0 @@
-[submodule "compiler-llvm"]
-	path = compiler-llvm
-	url = ssh://git@github.com/matter-labs/compiler-llvm
-	branch = vm1.1

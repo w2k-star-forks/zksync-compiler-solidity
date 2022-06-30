@@ -121,13 +121,13 @@ dependencies = [
 
 [[package]]
 name = "compiler-common"
-version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-common#845cea0cdeaf895c8d7134d84e4d2b1d7c06e105"
+version = "0.0.0"
+source = "git+ssh://git@github.com/matter-labs/compiler-common#7bf12a42ff64a46e88abc3186c671df8d48a7846"
 
 [[package]]
 name = "compiler-llvm-context"
-version = "1.1.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#d7e39dbd15db48a525d0e2118d149b529d440ae4"
+version = "0.0.0"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#2f7770347d4039825ee60b53c0ee542d61c584c2"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -137,7 +137,7 @@ dependencies = [
  "md5",
  "num",
  "regex",
- "semver 1.0.10",
+ "semver 1.0.11",
  "sha2",
  "sha3",
  "zkevm-assembly",
@@ -145,7 +145,7 @@ dependencies = [
 
 [[package]]
 name = "compiler-solidity"
-version = "1.1.0"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "colored",
@@ -158,7 +158,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
- "semver 1.0.10",
+ "semver 1.0.11",
  "serde",
  "serde_json",
  "shell-words",
@@ -248,9 +248,9 @@ dependencies = [
 
 [[package]]
 name = "either"
-version = "1.6.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
+checksum = "3f107b87b6afc2a64fd13cac55fe06d6c8859f12d4b14cbcdd2c67d0976781be"
 
 [[package]]
 name = "env_logger"
@@ -457,7 +457,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "llvm-builder"
-version = "1.0.0"
+version = "1.1.0"
 
 [[package]]
 name = "llvm-sys"
@@ -873,9 +873,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.10"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a41d061efea015927ac527063765e73601444cdc344ba855bc7bd44578b25e1c"
+checksum = "3d92beeab217753479be2f74e54187a6aed4c125ff0703a866c3147a02f0c6dd"
 
 [[package]]
 name = "semver-parser"
@@ -908,9 +908,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.81"
+version = "1.0.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
+checksum = "82c2c1fdcd807d1098552c5b9a36e425e42e9fbd7c6a37a8425f390f781f7fa7"
 dependencies = [
  "itoa",
  "ryu",
@@ -946,9 +946,9 @@ checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "smallvec"
-version = "1.8.1"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc88c725d61fc6c3132893370cac4a0200e3fedf5da8331c570664b1987f5ca2"
+checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
 name = "static_assertions"
