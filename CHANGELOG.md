@@ -1,8 +1,13 @@
 # The `zksolc` changelog
 
+## Version 1.1.3 (2022-XX-XX)
+
+- added the extcodesize check before the method selector
+- added the check for the latest supportable version of `solc`
+
 ## Version 1.1.2 (2022-07-01)
 
-- replace the linear exponentiation algorithm with the binary one
+- changed the linear exponentiation algorithm with the binary one
 
 ## Version 1.1.1 (2022-06-24)
 

@@ -43,6 +43,13 @@ fn main_inner() -> anyhow::Result<()> {
             compiler_solidity::SolcCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()
         }));
     let solc_version = solc.version()?;
+    if solc_version > compiler_solidity::SolcCompiler::LAST_SUPPORTED_VERSION {
+        anyhow::bail!(
+            "solc versions >{} are not supported yet, found {}",
+            compiler_solidity::SolcCompiler::LAST_SUPPORTED_VERSION,
+            solc_version
+        );
+    }
 
     let pipeline = if solc_version.minor < 8 || arguments.force_evmla {
         compiler_solidity::SolcPipeline::EVM

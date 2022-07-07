@@ -25,6 +25,9 @@ impl Compiler {
     /// The default executable name.
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "solc";
 
+    /// The last supported version of `solc`.
+    pub const LAST_SUPPORTED_VERSION: semver::Version = semver::Version::new(0, 8, 15);
+
     ///
     /// A shortcut constructor.
     ///

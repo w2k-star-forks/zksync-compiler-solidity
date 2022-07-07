@@ -1,13 +1,12 @@
 # Solidity compiler for zkEVM
 
-The compiler from Solidity to zkEVM bytecode.
+The compiler from Solidity to zkEVM.
 
 ## Building (only for developers)
 
 1. Get the access to the private [LLVM repository](https://github.com/matter-labs/compiler-llvm).
-2. Remove all the existing LLVM artifacts from your system.
-3. Build the `main` branch of LLVM by running `./build.sh release` at its root.
-4. Perform a clean build of this repository: `cargo clean && ./run.sh`.
+2. Run `cargo run --release --bin llvm-builder` to build the LLVM framework.
+3. Run `cargo build --verbose --release` to build the compiler executable.
 
 ## Usage
 
