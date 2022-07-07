@@ -7,6 +7,12 @@ incremental = true
 [env]
 LLVM_SYS_130_PREFIX = { value = "./llvm_build/", relative = true }
 
+[target.x86_64-unknown-linux-musl]
+rustflags = [
+    "-L", "native=/home/hedgar/src/llvm/compiler-llvm/install-musl/lib",
+    "-L", "native=/home/hedgar/src/llvm/compiler-llvm/install-host/lib/x86_64-pc-linux-musl",
+]
+
 [tools.clippy]
 warn = [
     "missing_docs_in_private_items",
