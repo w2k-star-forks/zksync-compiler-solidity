@@ -2,15 +2,17 @@
 rustflags = [
     "-W", "missing_docs",
 ]
-incremental = true
+
+[profile.release]
+strip = true
 
 [env]
 LLVM_SYS_130_PREFIX = { value = "./llvm_build/", relative = true }
 
 [target.x86_64-unknown-linux-musl]
 rustflags = [
-    "-L", "native=/home/hedgar/src/llvm/compiler-llvm/install-musl/lib",
-    "-L", "native=/home/hedgar/src/llvm/compiler-llvm/install-host/lib/x86_64-pc-linux-musl",
+    "-L", "native=/home/hedgar/opt/musl/lib",
+    "-L", "native=/home/hedgar/opt/llvm-musl-host/lib/x86_64-pc-linux-musl",
 ]
 
 [tools.clippy]
