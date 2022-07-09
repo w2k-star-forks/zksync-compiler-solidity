@@ -1,19 +1,21 @@
-# Solidity compiler for zkEVM
+# Solidity
 
 The compiler from Solidity to zkEVM.
 
-## Building (only for developers)
+## View only
 
-1. Get the access to the private [LLVM repository](https://github.com/matter-labs/compiler-llvm).
-2. Run `cargo run --release --bin llvm-builder` to build the LLVM framework.
-3. Run `cargo build --verbose --release` to build the compiler executable.
+This repository is public, but the compiler cannot yet be built from source.
+
+Please use the tools that have been offically released by Matter Labs.
 
 ## Usage
 
-```
-zksolc ERC20.sol --asm --bin --optimize --output-dir './build/'
-```
+Check `zksolc --help` for the compiler usage.
 
-The latest patch of the **solc v0.8** must be available through `PATH`.
+> The version `<=0.8.15` of Solidity compiler must be available in `PATH`.
 
-**Do not use the former patches of *solc*, as each version introduces important bug fixes!**
+> Do not use the former patches of *solc*, as each version introduces important bug fixes!
+
+## Resources
+
+[Solidity documentation](https://docs.soliditylang.org/en/v0.8.15/)
