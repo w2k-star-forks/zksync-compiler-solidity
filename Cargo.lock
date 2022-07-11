@@ -127,7 +127,7 @@ source = "git+ssh://git@github.com/matter-labs/compiler-common#1ecfaa82acab28758
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#6146636ef330982cd2521d48b990ff00bbb4b788"
+source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#ca1d9299ad2a48d9b6cc80aec409dc8a17c5e020"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -228,9 +228,9 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
 name = "crypto-common"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5999502d32b9c48d492abe66392408144895020ec4709e549e840799f3bb74c0"
+checksum = "2ccfd8c0ee4cce11e45b3fd6f9d5e69e0cc62912aa6a0cb1bf4617b0eba5a12f"
 dependencies = [
  "generic-array",
  "typenum",
@@ -458,6 +458,9 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 [[package]]
 name = "llvm-builder"
 version = "1.1.0"
+dependencies = [
+ "anyhow",
+]
 
 [[package]]
 name = "llvm-sys"
@@ -888,18 +891,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.138"
+version = "1.0.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1578c6245786b9d168c5447eeacfb96856573ca56c9d68fdcf394be134882a47"
+checksum = "0171ebb889e45aa68b44aee0859b3eede84c6f5f5c228e6f140c0b2a0a46cad6"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.138"
+version = "1.0.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "023e9b1467aef8a10fb88f25611870ada9800ef7e22afce356bb0d2387b6f27c"
+checksum = "dc1d3230c1de7932af58ad8ffbe1d784bd55efd5a9d84ac24f69c72d83543dfb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1190,7 +1193,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zkevm-assembly"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#5d4b8392ece3aa43e5f3efd3c0ba37c890d4070c"
+source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly#5d4b8392ece3aa43e5f3efd3c0ba37c890d4070c"
 dependencies = [
  "env_logger",
  "hex",

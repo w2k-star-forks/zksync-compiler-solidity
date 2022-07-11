@@ -11,3 +11,6 @@ description = "The LLVM framework dependency builder"
 [[bin]]
 name = "llvm-builder"
 path = "main.rs"
+
+[dependencies]
+anyhow = "1.0"
