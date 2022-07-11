@@ -122,12 +122,12 @@ dependencies = [
 [[package]]
 name = "compiler-common"
 version = "0.0.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-common#1ecfaa82acab28758248675a46a1993925d23634"
+source = "git+https://github.com/matter-labs/compiler-common#1ecfaa82acab28758248675a46a1993925d23634"
 
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+ssh://git@github.com/matter-labs/compiler-llvm-context#ca1d9299ad2a48d9b6cc80aec409dc8a17c5e020"
+source = "git+https://github.com/matter-labs/compiler-llvm-context#3795815724ff8e8009043c2db68500b3d0a1bc29"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -402,7 +402,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell#aba18ebf3b7f749339eea9c44811afbeadd0fb4d"
+source = "git+https://github.com/matter-labs-forks/inkwell#b4b55cdd95731d5a871f4936d8ce64ef48eb428d"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -415,7 +415,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.5.0"
-source = "git+ssh://git@github.com/matter-labs-forks/inkwell#aba18ebf3b7f749339eea9c44811afbeadd0fb4d"
+source = "git+https://github.com/matter-labs-forks/inkwell#b4b55cdd95731d5a871f4936d8ce64ef48eb428d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -465,7 +465,7 @@ dependencies = [
 [[package]]
 name = "llvm-sys"
 version = "130.0.2"
-source = "git+ssh://git@github.com/matter-labs-forks/llvm-sys.rs#cbd137f856d45f5d94f212ae3efb76f278314ae5"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs#cbd137f856d45f5d94f212ae3efb76f278314ae5"
 dependencies = [
  "cc",
  "lazy_static",
@@ -1193,7 +1193,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zkevm-assembly"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs/zkEVM-assembly#5d4b8392ece3aa43e5f3efd3c0ba37c890d4070c"
+source = "git+https://github.com/matter-labs/zkEVM-assembly#b94d5b23e92852590aa2b64a7c6f402e739f14ce"
 dependencies = [
  "env_logger",
  "hex",
@@ -1212,7 +1212,7 @@ dependencies = [
 [[package]]
 name = "zkevm_opcode_defs"
 version = "0.1.0"
-source = "git+ssh://git@github.com/matter-labs/zkevm_opcode_defs.git?branch=v1.1.1#924ca853affd3f8a09feb19ae4d5b67c1567320d"
+source = "git+https://github.com/matter-labs/zkevm_opcode_defs.git?branch=v1.1.1#924ca853affd3f8a09feb19ae4d5b67c1567320d"
 dependencies = [
  "bitflags",
  "ethereum-types",
