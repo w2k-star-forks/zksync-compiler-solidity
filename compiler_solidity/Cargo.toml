@@ -41,3 +41,6 @@ compiler-llvm-context = { git = "https://github.com/matter-labs/compiler-llvm-co
 git = "https://github.com/matter-labs-forks/inkwell"
 default-features = false
 features = ["llvm13-0", "no-libffi-linking", "target-syncvm"]
+
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = { version = "*", default-features = false }
