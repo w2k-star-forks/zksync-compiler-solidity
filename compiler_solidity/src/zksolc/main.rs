@@ -55,7 +55,9 @@ fn main_inner() -> anyhow::Result<()> {
         );
     }
 
-    let pipeline = if solc_version < compiler_solidity::SolcCompiler::FIRST_YUL_VERSION || arguments.force_evmla {
+    let pipeline = if solc_version < compiler_solidity::SolcCompiler::FIRST_YUL_VERSION
+        || arguments.force_evmla
+    {
         compiler_solidity::SolcPipeline::EVM
     } else {
         compiler_solidity::SolcPipeline::Yul

@@ -8,6 +8,9 @@ use std::process::Command;
 /// The building sequence.
 ///
 pub fn build() -> anyhow::Result<()> {
+    crate::utils::check_presence("cmake")?;
+    crate::utils::check_presence("ninja")?;
+
     crate::utils::command(
         Command::new("cmake").args(&[
             "-S",

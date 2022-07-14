@@ -20,6 +20,8 @@ fn main() {
 /// The entry result wrapper.
 ///
 fn main_wrapper() -> anyhow::Result<()> {
+    utils::check_presence("git")?;
+
     let llvm_tag = format!("v{}", env!("CARGO_PKG_VERSION"));
     let llvm_path = PathBuf::from("./compiler-llvm");
     if !llvm_path.exists() {

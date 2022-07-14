@@ -18,3 +18,17 @@ pub fn command(command: &mut Command, description: &str) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+///
+/// Checks if the tool exists in the system.
+///
+pub fn check_presence(name: &str) -> anyhow::Result<()> {
+    let status = Command::new("which")
+        .arg(name)
+        .status()
+        .map_err(|error| anyhow::anyhow!("`which {}` process: {}", name, error))?;
+    if !status.success() {
+        anyhow::bail!("Tool `{}` is missing. Please install", name);
+    }
+    Ok(())
+}
