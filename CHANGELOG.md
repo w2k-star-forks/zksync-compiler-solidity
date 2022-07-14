@@ -4,6 +4,7 @@
 
 - added the extcodesize check before the method selector
 - added the check for the latest supportable version of `solc`
+- fixed overwriting the return data size during non-EVM far calls
 
 ## Version 1.1.2 (2022-07-01)
 
