@@ -28,10 +28,17 @@ fn main_wrapper() -> anyhow::Result<()> {
                 "clone",
                 "--branch",
                 llvm_tag.as_str(),
-                "ssh://git@github.com/matter-labs/compiler-llvm",
+                "https://github.com/matter-labs/compiler-llvm",
                 llvm_path.to_string_lossy().as_ref(),
             ]),
             "LLVM cloning",
+        )?;
+    } else {
+        utils::command(
+            Command::new("git")
+                .current_dir(llvm_path)
+                .args(&["checkout", llvm_tag.as_str()]),
+            "LLVM checking out",
         )?;
     }
 
