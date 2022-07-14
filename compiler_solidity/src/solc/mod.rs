@@ -28,6 +28,9 @@ impl Compiler {
     /// The last supported version of `solc`.
     pub const LAST_SUPPORTED_VERSION: semver::Version = semver::Version::new(0, 8, 15);
 
+    /// The first version of `solc`, where Yul is used by default.
+    pub const FIRST_YUL_VERSION: semver::Version = semver::Version::new(0, 8, 0);
+
     ///
     /// A shortcut constructor.
     ///
