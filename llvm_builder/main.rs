@@ -43,6 +43,10 @@ fn main_wrapper() -> anyhow::Result<()> {
         } else if cfg!(target_os = "macos") {
             macos::build()?;
         }
+    } else if cfg!(target_arch = "aarch64") {
+        if cfg!(target_os = "macos") {
+            macos::build()?;
+        }
     }
 
     Ok(())
