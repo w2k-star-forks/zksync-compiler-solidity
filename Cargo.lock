@@ -475,7 +475,7 @@ dependencies = [
 [[package]]
 name = "llvm-sys"
 version = "130.0.2"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs#3263b442f61934406c0062a0fa7cfe0a218369bf"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs#8d0238c25ba02ef72b82d456b3187480d012f0ec"
 dependencies = [
  "cc",
  "lazy_static",
