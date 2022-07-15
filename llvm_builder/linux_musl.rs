@@ -48,6 +48,7 @@ pub fn build() -> anyhow::Result<()> {
     build_target(
         target_build_directory.as_path(),
         target_install_directory.as_path(),
+        musl_install_directory.as_path(),
         host_install_directory.as_path(),
     )?;
 
@@ -127,15 +128,19 @@ fn build_musl(build_directory: &Path, install_directory: &Path) -> anyhow::Resul
     let mut types_header_path = asm_include_directory.clone();
     types_header_path.push("types.h");
 
-    let mut copy_options = fs_extra::dir::CopyOptions::default();
-    copy_options.overwrite = true;
-    copy_options.copy_inside = true;
+    let copy_options = fs_extra::dir::CopyOptions {
+        overwrite: true,
+        copy_inside: true,
+        ..Default::default()
+    };
     fs_extra::dir::copy("/usr/include/linux", include_directory, &copy_options)?;
 
-    let mut copy_options = fs_extra::dir::CopyOptions::default();
-    copy_options.overwrite = true;
-    copy_options.copy_inside = true;
-    copy_options.content_only = true;
+    let copy_options = fs_extra::dir::CopyOptions {
+        overwrite: true,
+        copy_inside: true,
+        content_only: true,
+        ..Default::default()
+    };
     fs_extra::dir::copy(
         "/usr/include/asm-generic",
         asm_include_directory,
@@ -285,10 +290,12 @@ fn build_host(
     let mut build_lib_directory = build_directory.to_path_buf();
     build_lib_directory.push("lib/");
 
-    let mut copy_options = fs_extra::dir::CopyOptions::default();
-    copy_options.overwrite = true;
-    copy_options.copy_inside = true;
-    copy_options.content_only = true;
+    let copy_options = fs_extra::dir::CopyOptions {
+        overwrite: true,
+        copy_inside: true,
+        content_only: true,
+        ..Default::default()
+    };
     fs_extra::dir::copy(crt_lib_directory, build_lib_directory, &copy_options)?;
 
     crate::utils::command(
@@ -308,6 +315,7 @@ fn build_host(
 fn build_target(
     build_directory: &Path,
     install_directory: &Path,
+    musl_install_directory: &Path,
     host_install_directory: &Path,
 ) -> anyhow::Result<()> {
     let mut clang_path = host_install_directory.to_path_buf();
@@ -358,6 +366,32 @@ fn build_target(
             .arg(build_directory)
             .arg("install"),
         "LLVM target building ninja",
+    )?;
+
+    let mut musl_lib_directory = musl_install_directory.to_path_buf();
+    musl_lib_directory.push("lib/");
+
+    let mut host_lib_directory = host_install_directory.to_path_buf();
+    host_lib_directory.push("lib/x86_64-pc-linux-musl/");
+
+    let mut install_lib_directory = install_directory.to_path_buf();
+    install_lib_directory.push("lib/");
+
+    let copy_options = fs_extra::dir::CopyOptions {
+        overwrite: true,
+        copy_inside: true,
+        content_only: true,
+        ..Default::default()
+    };
+    fs_extra::dir::copy(
+        musl_lib_directory,
+        install_lib_directory.as_path(),
+        &copy_options,
+    )?;
+    fs_extra::dir::copy(
+        host_lib_directory,
+        install_lib_directory.as_path(),
+        &copy_options,
     )?;
 
     Ok(())
