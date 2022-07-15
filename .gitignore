@@ -7,6 +7,10 @@
 
 # The LLVM source and build
 /compiler-llvm/
+/musl-*
+/llvm_musl/
+/llvm_crt/
+/llvm_musl_host/
 /llvm_build/
 
 # IDE project data

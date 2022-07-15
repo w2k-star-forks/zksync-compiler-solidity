@@ -3,6 +3,7 @@
 //!
 
 pub(crate) mod linux_gnu;
+pub(crate) mod linux_musl;
 pub(crate) mod macos;
 pub(crate) mod utils;
 
@@ -48,6 +49,8 @@ fn main_wrapper() -> anyhow::Result<()> {
         if cfg!(target_os = "linux") {
             if cfg!(target_env = "gnu") {
                 linux_gnu::build()?;
+            } else if cfg!(target_env = "musl") {
+                linux_musl::build()?;
             }
         } else if cfg!(target_os = "macos") {
             macos::build()?;
@@ -56,6 +59,8 @@ fn main_wrapper() -> anyhow::Result<()> {
         if cfg!(target_os = "macos") {
             macos::build()?;
         }
+    } else {
+        anyhow::bail!("Unsupported on your machine");
     }
 
     Ok(())

@@ -11,6 +11,8 @@ pub fn build() -> anyhow::Result<()> {
     crate::utils::check_presence("cmake")?;
     crate::utils::check_presence("ninja")?;
 
+    let install_directory = crate::utils::absolute_path("./llvm_build/")?;
+
     crate::utils::command(
         Command::new("cmake").args(&[
             "-S",
@@ -19,7 +21,11 @@ pub fn build() -> anyhow::Result<()> {
             "./compiler-llvm/build/",
             "-G",
             "Ninja",
-            "-DCMAKE_INSTALL_PREFIX='./llvm_build/'",
+            format!(
+                "-DCMAKE_INSTALL_PREFIX={}",
+                install_directory.to_string_lossy()
+            )
+            .as_str(),
             "-DCMAKE_BUILD_TYPE='Release'",
             "-DLLVM_TARGETS_TO_BUILD='SyncVM'",
             "-DLLVM_OPTIMIZED_TABLEGEN='On'",

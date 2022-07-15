@@ -14,3 +14,5 @@ path = "main.rs"
 
 [dependencies]
 anyhow = "1.0"
+num_cpus = "1.13"
+fs_extra = "1.2"

@@ -2,6 +2,8 @@
 //! The LLVM build script utilities.
 //!
 
+use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
 ///
@@ -17,6 +19,15 @@ pub fn command(command: &mut Command, description: &str) -> anyhow::Result<()> {
         anyhow::bail!("{} failed", description);
     }
     Ok(())
+}
+
+///
+/// Create an absolute path, appending it to the current working directory.
+///
+pub fn absolute_path<P: AsRef<Path>>(path: P) -> anyhow::Result<PathBuf> {
+    let mut full_path = std::env::current_dir()?;
+    full_path.push(path);
+    Ok(full_path)
 }
 
 ///
