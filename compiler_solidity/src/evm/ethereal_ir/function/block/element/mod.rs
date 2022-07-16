@@ -6,9 +6,9 @@ pub mod stack;
 
 use inkwell::values::BasicValue;
 
+use crate::evm::assembly::instruction::codecopy;
 use crate::evm::assembly::instruction::name::Name as InstructionName;
-use crate::evm::assembly::instruction::{codecopy, Instruction};
-use crate::evm::ethereal_ir::EtherealIR;
+use crate::evm::assembly::instruction::Instruction;
 
 use self::stack::Stack;
 
@@ -174,10 +174,12 @@ where
                     crate::evm::assembly::instruction::stack::push(context, value)
                 }
             }
-            InstructionName::PUSHDEPLOYADDRESS => compiler_llvm_context::immutable::load(
-                context,
-                EtherealIR::DEPLOY_ADDRESS_STORAGE_KEY.to_owned(),
-            ),
+            InstructionName::PUSHDEPLOYADDRESS => Ok(context.build_call(
+                context
+                    .get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::CodeSource),
+                &[],
+                "contract_deploy_address",
+            )),
 
             InstructionName::DUP1 => crate::evm::assembly::instruction::stack::dup(
                 context,
@@ -665,16 +667,31 @@ where
                     .instruction
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
-                compiler_llvm_context::immutable::load(context, key)
+                let key_numeric: u64 = key.parse().map_err(|error| {
+                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                })?;
+                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
+
+                let index = context.field_const(key_normalized);
+                compiler_llvm_context::immutable::load(context, index)
             }
             InstructionName::ASSIGNIMMUTABLE => {
                 let mut arguments = self.pop_arguments_llvm(context);
+
                 let key = self
                     .instruction
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
+                let key_numeric: u64 = key.parse().map_err(|error| {
+                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                })?;
+                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
+                context
+                    .update_immutable_size((key_normalized as usize) + compiler_common::SIZE_FIELD);
+
+                let index = context.field_const(key_normalized);
                 let value = arguments.pop().expect("Always exists").into_int_value();
-                compiler_llvm_context::immutable::store(context, key, value)
+                compiler_llvm_context::immutable::store(context, index, value)
             }
 
             InstructionName::CALLDATALOAD => {

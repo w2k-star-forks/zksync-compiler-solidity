@@ -369,7 +369,23 @@ impl FunctionCall {
                     .original
                     .take()
                     .ok_or_else(|| anyhow::anyhow!("`load_immutable` literal is missing"))?;
-                compiler_llvm_context::immutable::load(context, key)
+
+                if key.as_str() == "library_deploy_address" {
+                    return Ok(context.build_call(
+                        context.get_intrinsic_function(
+                            compiler_llvm_context::IntrinsicFunction::CodeSource,
+                        ),
+                        &[],
+                        "library_deploy_address",
+                    ));
+                }
+
+                let key_numeric: u64 = key.parse().map_err(|error| {
+                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                })?;
+                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
+                let index = context.field_const(key_normalized);
+                compiler_llvm_context::immutable::load(context, index)
             }
             Name::SetImmutable => {
                 let mut arguments = self.pop_arguments::<D, 3>(context)?;
@@ -377,8 +393,21 @@ impl FunctionCall {
                     .original
                     .take()
                     .ok_or_else(|| anyhow::anyhow!("`load_immutable` literal is missing"))?;
+
+                if key.as_str() == "library_deploy_address" {
+                    return Ok(None);
+                }
+
+                let key_numeric: u64 = key.parse().map_err(|error| {
+                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                })?;
+                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
+                context
+                    .update_immutable_size((key_normalized as usize) + compiler_common::SIZE_FIELD);
+
+                let index = context.field_const(key_normalized);
                 let value = arguments[2].value.into_int_value();
-                compiler_llvm_context::immutable::store(context, key, value)
+                compiler_llvm_context::immutable::store(context, index, value)
             }
 
             Name::CallDataLoad => {

@@ -122,12 +122,12 @@ dependencies = [
 [[package]]
 name = "compiler-common"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-common#1ecfaa82acab28758248675a46a1993925d23634"
+source = "git+https://github.com/matter-labs/compiler-common#7ed3b02bf926237f3fbb9645e33bb4dff29443a7"
 
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-llvm-context#8046520f5a371d33203dc9ee3c5f5456bfe725cb"
+source = "git+https://github.com/matter-labs/compiler-llvm-context#4ba0cacd0ce26ff7acbf10efa44beecb3b5cb775"
 dependencies = [
  "anyhow",
  "compiler-common",

@@ -4,8 +4,6 @@
 
 use inkwell::values::BasicValue;
 
-use crate::evm::ethereal_ir::EtherealIR;
-
 ///
 /// Translates the contract hash copying.
 ///
@@ -42,21 +40,6 @@ pub fn library_marker<'ctx, D>(
 where
     D: compiler_llvm_context::Dependency,
 {
-    if let compiler_llvm_context::CodeType::Deploy = context.code_type() {
-        let address = context
-            .build_call(
-                context.get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::Address),
-                &[],
-                "address",
-            )
-            .expect("Always exists");
-        compiler_llvm_context::immutable::store(
-            context,
-            EtherealIR::DEPLOY_ADDRESS_STORAGE_KEY.to_owned(),
-            address.into_int_value(),
-        )?;
-    }
-
     compiler_llvm_context::memory::store_byte(
         context,
         [

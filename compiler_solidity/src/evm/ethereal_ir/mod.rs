@@ -28,9 +28,6 @@ impl EtherealIR {
     /// The default entry function name.
     pub const DEFAULT_ENTRY_FUNCTION_NAME: &'static str = "function_main";
 
-    /// The `deploy address` immutable storage key.
-    pub const DEPLOY_ADDRESS_STORAGE_KEY: &'static str = "deploy_address";
-
     /// The blocks hashmap initial capacity.
     pub const BLOCKS_HASHMAP_DEFAULT_CAPACITY: usize = 64;
 
