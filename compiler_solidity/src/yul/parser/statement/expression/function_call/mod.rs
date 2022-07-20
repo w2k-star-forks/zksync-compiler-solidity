@@ -76,8 +76,7 @@ impl FunctionCall {
     {
         match self.name {
             Name::UserDefined(name)
-                if name
-                    .starts_with(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) =>
+                if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) =>
             {
                 let mut values = Vec::with_capacity(self.arguments.len());
                 for argument in self.arguments.into_iter() {

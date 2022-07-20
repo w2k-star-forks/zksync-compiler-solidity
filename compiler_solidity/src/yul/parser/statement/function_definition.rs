@@ -45,14 +45,14 @@ impl FunctionDefinition {
         }
 
         let (mut arguments, next) = Identifier::parse_typed_list(lexer, None)?;
-        if name.starts_with(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) {
+        if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) {
             if arguments.is_empty() {
                 anyhow::bail!("The `{}` function must have at least one argument", name);
             }
 
             arguments.remove(0);
         }
-        if name.as_str() == compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_EXCEPTION_HANDLER
+        if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_EXCEPTION_HANDLER)
             && !arguments.is_empty()
         {
             anyhow::bail!("The `{}` function cannot have arguments", name);
