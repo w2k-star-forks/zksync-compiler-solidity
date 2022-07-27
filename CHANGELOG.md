@@ -2,7 +2,7 @@
 
 ## Version 1.1.4 (2022-XX-XX)
 
-
+- fixed the reserved function names check in variable names
 
 ## Version 1.1.3 (2022-07-16)
 

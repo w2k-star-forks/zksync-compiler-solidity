@@ -9,6 +9,7 @@ use crate::yul::lexer::lexeme::symbol::Symbol;
 use crate::yul::lexer::lexeme::Lexeme;
 use crate::yul::lexer::Lexer;
 use crate::yul::parser::identifier::Identifier;
+use crate::yul::parser::statement::expression::function_call::name::Name as FunctionName;
 use crate::yul::parser::statement::expression::Expression;
 
 ///
@@ -33,6 +34,15 @@ impl VariableDeclaration {
         let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
 
         let (bindings, next) = Identifier::parse_typed_list(lexer, Some(lexeme))?;
+        for binding in bindings.iter() {
+            match FunctionName::from(binding.name.as_str()) {
+                FunctionName::UserDefined(_) => continue,
+                _function_name => anyhow::bail!(
+                    "Reserved function name `{}` cannot be a variable identifier",
+                    binding.name
+                ),
+            }
+        }
 
         match crate::yul::parser::take_or_next(next, lexer)? {
             Lexeme::Symbol(Symbol::Assignment) => {}
