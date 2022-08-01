@@ -1,26 +1,40 @@
 # The `zksolc` changelog
 
-## Version 1.1.4 (2022-XX-XX)
+## Unreleased
 
-- fixed the reserved function names check in variable names
+### Fixed
 
-## Version 1.1.3 (2022-07-16)
+- the check for reserved function names in variable names
 
-- added the extcodesize check before the method selector
-- added the check for the latest supportable version of `solc`
-- added a lot of LLVM optimizations
-- fixed overwriting the return data size during non-EVM far calls
-- fixed the incorrect behavior of immutables in some cases
-- changed the default memory allocator for MUSL to `mimalloc`
+## Version 1.1.3 [2022-07-16]
 
-## Version 1.1.2 (2022-07-01)
+### Added
 
-- changed the linear exponentiation algorithm with the binary one
+- the extcodesize check before the method selector
+- the check for the latest supportable version of `solc`
+- a lot of LLVM optimizations
 
-## Version 1.1.1 (2022-06-24)
+### Changed
 
-- fixed the evaluation order of event indexed fields
+- the default memory allocator for MUSL to `mimalloc`
 
-## Version 1.1.0 (2022-06-21)
+### Fixed
+
+- overwriting the return data size during non-EVM far calls
+- the incorrect behavior of immutables in some cases
+
+## Version 1.1.2 [2022-07-01]
+
+### Changed
+
+- the exponentiation algorithm from linear to binary
+
+## Version 1.1.1 [2022-06-24]
+
+### Fixed
+
+- the evaluation order of event indexed fields
+
+## Version 1.1.0 [2022-06-21]
 
 *Initial release*

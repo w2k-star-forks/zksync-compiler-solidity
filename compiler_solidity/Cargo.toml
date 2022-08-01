@@ -29,7 +29,7 @@ hex = "0.4"
 num = "0.4"
 md5 = "0.7"
 
-zkevm-assembly = { git = "https://github.com/matter-labs/zkEVM-assembly" }
+zkevm-assembly = { git = "https://github.com/matter-labs/zkEVM-assembly", branch = "v1.1.1" }
 
 compiler-common = { git = "https://github.com/matter-labs/compiler-common" }
 compiler-llvm-context = { git = "https://github.com/matter-labs/compiler-llvm-context" }
