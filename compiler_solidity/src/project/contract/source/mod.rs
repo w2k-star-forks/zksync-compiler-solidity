@@ -5,7 +5,7 @@
 pub mod evm;
 pub mod yul;
 
-use crate::evm::assembly::Assembly;
+use crate::evmla::assembly::Assembly;
 use crate::yul::parser::statement::object::Object;
 
 use self::evm::EVM;

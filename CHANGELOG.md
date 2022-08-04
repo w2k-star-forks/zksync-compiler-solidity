@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- better compatibility of opcodes `GASLIMIT`, `GASPRICE`, `CHAINID`, `DIFFICULTY`, `COINBASE` etc.
+
 ### Fixed
 
 - the check for reserved function names in variable names
+- an EVMLA stack inconsistency issue with the `GASPRICE` opcode
 
 ## Version 1.1.3 [2022-07-16]
 

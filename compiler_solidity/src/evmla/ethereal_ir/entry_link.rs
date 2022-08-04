@@ -4,7 +4,7 @@
 
 use inkwell::values::BasicValue;
 
-use crate::evm::ethereal_ir::EtherealIR;
+use crate::evmla::ethereal_ir::EtherealIR;
 
 ///
 /// The Ethereal IR entry function link.

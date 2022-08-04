@@ -20,11 +20,11 @@ use num::Num;
 use num::ToPrimitive;
 use num::Zero;
 
-use crate::evm::assembly::instruction::name::Name as InstructionName;
-use crate::evm::assembly::instruction::Instruction;
-use crate::evm::ethereal_ir::function::block::element::stack::element::Element;
-use crate::evm::ethereal_ir::function::block::element::stack::Stack;
-use crate::evm::ethereal_ir::EtherealIR;
+use crate::evmla::assembly::instruction::name::Name as InstructionName;
+use crate::evmla::assembly::instruction::Instruction;
+use crate::evmla::ethereal_ir::function::block::element::stack::element::Element;
+use crate::evmla::ethereal_ir::function::block::element::stack::Stack;
+use crate::evmla::ethereal_ir::EtherealIR;
 
 use self::block::element::stack::element::Element as StackElement;
 use self::block::element::Element as BlockElement;

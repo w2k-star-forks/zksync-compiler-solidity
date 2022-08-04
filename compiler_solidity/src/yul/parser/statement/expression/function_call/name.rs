@@ -97,6 +97,8 @@ pub enum Name {
     CodeCopy,
     /// size of the code at address `a`
     ExtCodeSize,
+    /// code hash of address `a`
+    ExtCodeHash,
     /// size of the last returndata
     ReturnDataSize,
     /// copy `s` bytes from returndata at position `f` to mem at position `t`
@@ -158,46 +160,36 @@ pub enum Name {
     Address,
     /// call sender (excluding `delegatecall`)
     Caller,
-    /// timestamp of the current block in seconds since the epoch
-    Timestamp,
-    /// current block number
-    Number,
+
+    /// wei sent together with the current call
+    CallValue,
     /// gas still available to execution
     Gas,
+    /// wei balance at address `a`
+    Balance,
+    /// equivalent to `balance(address())`, but cheaper
+    SelfBalance,
 
     /// block gas limit of the current block
     GasLimit,
     /// gas price of the transaction
     GasPrice,
-    /// wei sent together with the current call
-    CallValue,
-    /// size of memory, i.e. largest accessed memory index
-    MSize,
     /// transaction sender
     Origin,
     /// ID of the executing chain (EIP 1344)
     ChainId,
+    /// current block number
+    Number,
+    /// timestamp of the current block in seconds since the epoch
+    Timestamp,
     /// hash of block nr b - only for last 256 blocks excluding current
     BlockHash,
-
     /// difficulty of the current block
     Difficulty,
-    /// current position in code
-    Pc,
-    /// wei balance at address `a`
-    Balance,
-    /// equivalent to `balance(address())`, but cheaper
-    SelfBalance,
     /// current mining beneficiary
     CoinBase,
-    /// the base fee
-    BaseFee,
-    /// like `codecopy(t, f, s)` but take code at address `a`
-    ExtCodeCopy,
-    /// code hash of address `a`
-    ExtCodeHash,
-    /// end execution, destroy current contract and send funds to `a`
-    SelfDestruct,
+    /// size of memory, i.e. largest accessed memory index
+    MSize,
 
     /// verbatim instruction with 0 inputs and 0 outputs
     Verbatim {
@@ -206,6 +198,15 @@ pub enum Name {
         /// the number of output arguments
         output_size: usize,
     },
+
+    /// the base fee
+    BaseFee,
+    /// current position in code
+    Pc,
+    /// like `codecopy(t, f, s)` but take code at address `a`
+    ExtCodeCopy,
+    /// end execution, destroy current contract and send funds to `a`
+    SelfDestruct,
 }
 
 impl Name {

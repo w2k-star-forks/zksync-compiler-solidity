@@ -6,9 +6,9 @@ pub mod stack;
 
 use inkwell::values::BasicValue;
 
-use crate::evm::assembly::instruction::codecopy;
-use crate::evm::assembly::instruction::name::Name as InstructionName;
-use crate::evm::assembly::instruction::Instruction;
+use crate::evmla::assembly::instruction::codecopy;
+use crate::evmla::assembly::instruction::name::Name as InstructionName;
+use crate::evmla::assembly::instruction::Instruction;
 
 use self::stack::Stack;
 
@@ -86,9 +86,9 @@ impl<D> compiler_llvm_context::WriteLLVM<D> for Element
 where
     D: compiler_llvm_context::Dependency,
 {
-    fn into_llvm<'ctx, 'dep>(
+    fn into_llvm(
         mut self,
-        context: &mut compiler_llvm_context::Context<'ctx, D>,
+        context: &mut compiler_llvm_context::Context<'_, D>,
     ) -> anyhow::Result<()> {
         let input_size = self.instruction.input_size(&context.evm().version);
         let mut original = self.instruction.value.clone();
@@ -126,13 +126,13 @@ where
             | InstructionName::PUSH29
             | InstructionName::PUSH30
             | InstructionName::PUSH31
-            | InstructionName::PUSH32 => crate::evm::assembly::instruction::stack::push(
+            | InstructionName::PUSH32 => crate::evmla::assembly::instruction::stack::push(
                 context,
                 self.instruction
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?,
             ),
-            InstructionName::PUSH_Tag => crate::evm::assembly::instruction::stack::push_tag(
+            InstructionName::PUSH_Tag => crate::evmla::assembly::instruction::stack::push_tag(
                 context,
                 self.instruction
                     .value
@@ -171,7 +171,7 @@ where
                 if value.len() > compiler_common::SIZE_FIELD * 2 {
                     Ok(Some(context.field_const(0).as_basic_value_enum()))
                 } else {
-                    crate::evm::assembly::instruction::stack::push(context, value)
+                    crate::evmla::assembly::instruction::stack::push(context, value)
                 }
             }
             InstructionName::PUSHDEPLOYADDRESS => Ok(context.build_call(
@@ -181,185 +181,185 @@ where
                 "contract_deploy_address",
             )),
 
-            InstructionName::DUP1 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP1 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 1,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP2 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP2 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 2,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP3 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP3 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 3,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP4 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP4 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 4,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP5 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP5 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 5,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP6 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP6 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 6,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP7 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP7 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 7,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP8 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP8 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 8,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP9 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP9 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 9,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP10 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP10 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 10,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP11 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP11 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 11,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP12 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP12 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 12,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP13 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP13 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 13,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP14 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP14 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 14,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP15 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP15 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 15,
                 self.stack.elements.len(),
                 &mut original,
             ),
-            InstructionName::DUP16 => crate::evm::assembly::instruction::stack::dup(
+            InstructionName::DUP16 => crate::evmla::assembly::instruction::stack::dup(
                 context,
                 16,
                 self.stack.elements.len(),
                 &mut original,
             ),
 
-            InstructionName::SWAP1 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP1 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 1,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP2 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP2 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 2,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP3 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP3 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 3,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP4 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP4 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 4,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP5 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP5 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 5,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP6 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP6 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 6,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP7 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP7 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 7,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP8 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP8 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 8,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP9 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP9 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 9,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP10 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP10 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 10,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP11 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP11 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 11,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP12 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP12 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 12,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP13 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP13 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 13,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP14 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP14 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 14,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP15 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP15 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 15,
                 self.stack.elements.len(),
             ),
-            InstructionName::SWAP16 => crate::evm::assembly::instruction::stack::swap(
+            InstructionName::SWAP16 => crate::evmla::assembly::instruction::stack::swap(
                 context,
                 16,
                 self.stack.elements.len(),
             ),
 
-            InstructionName::POP => crate::evm::assembly::instruction::stack::pop(context),
+            InstructionName::POP => crate::evmla::assembly::instruction::stack::pop(context),
 
             InstructionName::Tag => {
                 let destination: num::BigUint = self
@@ -369,7 +369,7 @@ where
                     .parse()
                     .expect("Always valid");
 
-                crate::evm::assembly::instruction::jump::unconditional(
+                crate::evmla::assembly::instruction::jump::unconditional(
                     context,
                     destination,
                     self.stack.hash(),
@@ -378,7 +378,7 @@ where
             InstructionName::JUMP => {
                 let destination = self.stack.pop_tag()?;
 
-                crate::evm::assembly::instruction::jump::unconditional(
+                crate::evmla::assembly::instruction::jump::unconditional(
                     context,
                     destination,
                     self.stack.hash(),
@@ -388,7 +388,7 @@ where
                 let destination = self.stack.pop_tag()?;
                 self.stack.pop()?;
 
-                crate::evm::assembly::instruction::jump::conditional(
+                crate::evmla::assembly::instruction::jump::conditional(
                     context,
                     destination,
                     self.stack.hash(),
@@ -398,216 +398,219 @@ where
             InstructionName::JUMPDEST => Ok(None),
 
             InstructionName::ADD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::addition(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::addition(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SUB => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::subtraction(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::subtraction(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::MUL => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::multiplication(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::multiplication(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::DIV => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::division(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::division(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::MOD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::remainder(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::remainder(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SDIV => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::division_signed(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::division_signed(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SMOD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::arithmetic::remainder_signed(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::arithmetic::remainder_signed(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             InstructionName::LT => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::ULT,
                 )
             }
             InstructionName::GT => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::UGT,
                 )
             }
             InstructionName::EQ => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::EQ,
                 )
             }
             InstructionName::ISZERO => {
-                let mut arguments = self.pop_arguments_llvm(context);
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    [
-                        arguments.remove(0),
-                        context.field_const(0).as_basic_value_enum(),
-                    ],
+                    arguments[0].into_int_value(),
+                    context.field_const(0),
                     inkwell::IntPredicate::EQ,
                 )
             }
             InstructionName::SLT => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::SLT,
                 )
             }
             InstructionName::SGT => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::SGT,
                 )
             }
 
             InstructionName::OR => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::or(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::or(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::XOR => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::xor(context, arguments)
-            }
-            InstructionName::NOT => {
-                let mut arguments = self.pop_arguments_llvm(context);
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::bitwise::xor(
                     context,
-                    [
-                        arguments.remove(0),
-                        context.field_type().const_all_ones().as_basic_value_enum(),
-                    ],
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
+            }
+            InstructionName::NOT => {
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::xor(
+                    context,
+                    arguments[0].into_int_value(),
+                    context.field_type().const_all_ones(),
                 )
             }
             InstructionName::AND => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::and(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::and(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SHL => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::shift_left(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::shift_left(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SHR => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::shift_right(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::shift_right(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SAR => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::shift_right_arithmetic(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::shift_right_arithmetic(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::BYTE => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::bitwise::byte(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::bitwise::byte(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             InstructionName::ADDMOD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::math::add_mod(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::math::add_mod(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             InstructionName::MULMOD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::math::mul_mod(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::math::mul_mod(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             InstructionName::EXP => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::math::exponent(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::math::exponent(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::SIGNEXTEND => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::math::sign_extend(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::math::sign_extend(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             InstructionName::SHA3 => {
-                let arguments: [inkwell::values::BasicValueEnum<'ctx>; 2] = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::hash::keccak256(
                     context,
                     arguments[0].into_int_value(),
@@ -615,10 +618,7 @@ where
                 )
             }
             InstructionName::KECCAK256 => {
-                let arguments: [inkwell::values::BasicValueEnum<'ctx>; 2] = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments = self.pop_arguments_llvm(context);
                 compiler_llvm_context::hash::keccak256(
                     context,
                     arguments[0].into_int_value(),
@@ -627,40 +627,37 @@ where
             }
 
             InstructionName::MLOAD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::memory::load(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::memory::load(context, arguments[0].into_int_value())
             }
             InstructionName::MSTORE => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::memory::store(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::memory::store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::MSTORE8 => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::memory::store_byte(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::memory::store_byte(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             InstructionName::SLOAD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::storage::load(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::storage::load(context, arguments[0].into_int_value())
             }
             InstructionName::SSTORE => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::storage::store(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::storage::store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::PUSHIMMUTABLE => {
                 let key = self
@@ -695,28 +692,24 @@ where
             }
 
             InstructionName::CALLDATALOAD => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::calldata::load(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::calldata::load(context, arguments[0].into_int_value())
             }
             InstructionName::CALLDATASIZE => compiler_llvm_context::calldata::size(context),
             InstructionName::CALLDATACOPY => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::calldata::copy(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::calldata::copy(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             InstructionName::CODESIZE => compiler_llvm_context::calldata::size(context),
             InstructionName::CODECOPY => {
                 let mut arguments =
                     Vec::with_capacity(self.instruction.input_size(&self.solc_version));
-                let arguments_with_original: [compiler_llvm_context::Argument<'ctx>; 3] = self
-                    .pop_arguments(context)
-                    .try_into()
-                    .expect("Always valid");
+                let arguments_with_original = self.pop_arguments(context);
                 for (index, argument) in arguments_with_original.iter().enumerate() {
                     let pointer = argument.value.into_pointer_value();
                     let value = context.build_load(pointer, format!("argument_{}", index).as_str());
@@ -735,7 +728,8 @@ where
                     {
                         codecopy::contract_hash(
                             context,
-                            arguments.try_into().expect("Always valid"),
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
                         )
                     }
                     Some(source)
@@ -750,27 +744,27 @@ where
                         }
                     }
                     Some(source) if source.chars().all(|char| char.is_ascii_hexdigit()) => {
-                        codecopy::static_data(
-                            context,
-                            arguments.try_into().expect("Always valid"),
-                            source,
-                        )
+                        codecopy::static_data(context, arguments[0].into_int_value(), source)
                     }
                     Some(_source) => Ok(None),
                     None => compiler_llvm_context::calldata::copy(
                         context,
-                        arguments.try_into().expect("Always valid"),
+                        arguments[0].into_int_value(),
+                        arguments[1].into_int_value(),
+                        arguments[2].into_int_value(),
                     ),
                 }
             }
             InstructionName::PUSHSIZE => Ok(Some(context.field_const(0).as_basic_value_enum())),
             InstructionName::RETURNDATASIZE => compiler_llvm_context::return_data::size(context),
             InstructionName::RETURNDATACOPY => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::return_data::copy(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::return_data::copy(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             InstructionName::EXTCODESIZE => {
                 let arguments = self.pop_arguments_llvm(context);
@@ -782,18 +776,20 @@ where
             }
 
             InstructionName::RETURN => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::r#return::r#return(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::r#return::r#return(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::REVERT => {
-                let arguments = self
-                    .pop_arguments_llvm(context)
-                    .try_into()
-                    .expect("Always valid");
-                compiler_llvm_context::r#return::revert(context, arguments)
+                let arguments = self.pop_arguments_llvm(context);
+                compiler_llvm_context::r#return::revert(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             InstructionName::STOP => compiler_llvm_context::r#return::stop(context),
             InstructionName::INVALID => compiler_llvm_context::r#return::invalid(context),
@@ -967,52 +963,9 @@ where
                 &[],
                 "caller",
             )),
-            InstructionName::TIMESTAMP => {
-                let meta_packed = context
-                    .build_call(
-                        context
-                            .get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::Meta),
-                        &[],
-                        "meta",
-                    )
-                    .expect("Always exists");
-                let meta_shifted = context.builder().build_right_shift(
-                    meta_packed.into_int_value(),
-                    context.field_const(compiler_common::BITLENGTH_X64 as u64),
-                    false,
-                    "meta_shifted",
-                );
-                let block_timestamp = context.builder().build_and(
-                    meta_shifted,
-                    context.field_const(u64::MAX),
-                    "block_number",
-                );
-                Ok(Some(block_timestamp.as_basic_value_enum()))
-            }
-            InstructionName::NUMBER => {
-                let meta_packed = context
-                    .build_call(
-                        context
-                            .get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::Meta),
-                        &[],
-                        "meta",
-                    )
-                    .expect("Always exists");
-                let block_number = context.builder().build_and(
-                    meta_packed.into_int_value(),
-                    context.field_const(u64::MAX),
-                    "block_number",
-                );
-                Ok(Some(block_number.as_basic_value_enum()))
-            }
-            InstructionName::ORIGIN => Ok(context.build_call(
-                context.get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::TxOrigin),
-                &[],
-                "tx_origin",
-            )),
-            InstructionName::GAS => compiler_llvm_context::ether_gas::gas(context),
-            InstructionName::CALLVALUE => compiler_llvm_context::ether_gas::value(context),
 
+            InstructionName::CALLVALUE => compiler_llvm_context::ether_gas::value(context),
+            InstructionName::GAS => compiler_llvm_context::ether_gas::gas(context),
             InstructionName::BALANCE => {
                 let arguments = self.pop_arguments_llvm(context);
 
@@ -1034,20 +987,33 @@ where
                 compiler_llvm_context::ether_gas::balance(context, address)
             }
 
-            InstructionName::GASLIMIT => Ok(Some(
-                context.field_const(u32::MAX as u64).as_basic_value_enum(),
-            )),
-            InstructionName::MSIZE => Ok(Some(
-                context
-                    .field_const(((1 << 16) * compiler_common::SIZE_FIELD) as u64)
-                    .as_basic_value_enum(),
-            )),
+            InstructionName::GASLIMIT => {
+                compiler_llvm_context::contract_context::gas_limit(context)
+            }
+            InstructionName::GASPRICE => {
+                compiler_llvm_context::contract_context::gas_price(context)
+            }
+            InstructionName::ORIGIN => compiler_llvm_context::contract_context::origin(context),
+            InstructionName::CHAINID => compiler_llvm_context::contract_context::chain_id(context),
+            InstructionName::TIMESTAMP => {
+                compiler_llvm_context::contract_context::block_timestamp(context)
+            }
+            InstructionName::NUMBER => {
+                compiler_llvm_context::contract_context::block_number(context)
+            }
+            InstructionName::BLOCKHASH => {
+                let arguments = self.pop_arguments_llvm(context);
+                let index = arguments[0].into_int_value();
+
+                compiler_llvm_context::contract_context::block_hash(context, index)
+            }
+            InstructionName::DIFFICULTY => {
+                compiler_llvm_context::contract_context::difficulty(context)
+            }
+            InstructionName::COINBASE => compiler_llvm_context::contract_context::coinbase(context),
+            InstructionName::MSIZE => compiler_llvm_context::contract_context::msize(context),
+
             InstructionName::BASEFEE => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::COINBASE => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::CHAINID => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::BLOCKHASH => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::DIFFICULTY => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            InstructionName::GASPRICE => Ok(Some(context.field_const(0).as_basic_value_enum())),
             InstructionName::PC => Ok(Some(context.field_const(0).as_basic_value_enum())),
             InstructionName::EXTCODECOPY => {
                 let _arguments = self.pop_arguments_llvm(context);

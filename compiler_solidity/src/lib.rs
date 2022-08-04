@@ -4,7 +4,7 @@
 
 pub(crate) mod build;
 pub(crate) mod dump_flag;
-pub(crate) mod evm;
+pub(crate) mod evmla;
 pub(crate) mod project;
 pub(crate) mod solc;
 pub(crate) mod yul;

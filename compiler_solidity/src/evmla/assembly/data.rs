@@ -5,7 +5,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::evm::assembly::Assembly;
+use crate::evmla::assembly::Assembly;
 
 ///
 /// The inner JSON legacy assembly code element representation.

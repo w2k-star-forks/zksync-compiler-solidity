@@ -5,7 +5,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::evm::assembly::instruction::Instruction;
+use crate::evmla::assembly::instruction::Instruction;
 
 ///
 /// The EVM instruction name.
@@ -262,6 +262,8 @@ pub enum Name {
     /// The eponymous EVM instruction.
     EXTCODESIZE,
     /// The eponymous EVM instruction.
+    EXTCODEHASH,
+    /// The eponymous EVM instruction.
     RETURNDATASIZE,
     /// The eponymous EVM instruction.
     RETURNDATACOPY,
@@ -270,6 +272,10 @@ pub enum Name {
     RETURN,
     /// The eponymous EVM instruction.
     REVERT,
+    /// The eponymous EVM instruction.
+    STOP,
+    /// The eponymous EVM instruction.
+    INVALID,
 
     /// The eponymous EVM instruction.
     LOG0,
@@ -283,17 +289,6 @@ pub enum Name {
     LOG4,
 
     /// The eponymous EVM instruction.
-    ADDRESS,
-    /// The eponymous EVM instruction.
-    CALLER,
-    /// The eponymous EVM instruction.
-    TIMESTAMP,
-    /// The eponymous EVM instruction.
-    NUMBER,
-    /// The eponymous EVM instruction.
-    GAS,
-
-    /// The eponymous EVM instruction.
     CALL,
     /// The eponymous EVM instruction.
     CALLCODE,
@@ -303,52 +298,58 @@ pub enum Name {
     DELEGATECALL,
 
     /// The eponymous EVM instruction.
-    PUSHLIB,
-    /// The eponymous EVM instruction.
-    PUSHDEPLOYADDRESS,
-
-    /// The eponymous EVM instruction.
-    STOP,
-    /// The eponymous EVM instruction.
-    SELFDESTRUCT,
-    /// The eponymous EVM instruction.
-    INVALID,
-
-    /// The eponymous EVM instruction.
     CREATE,
     /// The eponymous EVM instruction.
     CREATE2,
 
     /// The eponymous EVM instruction.
-    PC,
+    ADDRESS,
+    /// The eponymous EVM instruction.
+    CALLER,
+
     /// The eponymous EVM instruction.
     CALLVALUE,
     /// The eponymous EVM instruction.
-    MSIZE,
+    GAS,
     /// The eponymous EVM instruction.
     BALANCE,
     /// The eponymous EVM instruction.
     SELFBALANCE,
+
     /// The eponymous EVM instruction.
-    CHAINID,
+    PUSHLIB,
     /// The eponymous EVM instruction.
-    ORIGIN,
-    /// The eponymous EVM instruction.
-    BLOCKHASH,
-    /// The eponymous EVM instruction.
-    COINBASE,
-    /// The eponymous EVM instruction.
-    DIFFICULTY,
+    PUSHDEPLOYADDRESS,
+
     /// The eponymous EVM instruction.
     GASLIMIT,
     /// The eponymous EVM instruction.
     GASPRICE,
     /// The eponymous EVM instruction.
-    EXTCODECOPY,
+    ORIGIN,
     /// The eponymous EVM instruction.
-    EXTCODEHASH,
+    CHAINID,
+    /// The eponymous EVM instruction.
+    NUMBER,
+    /// The eponymous EVM instruction.
+    TIMESTAMP,
+    /// The eponymous EVM instruction.
+    BLOCKHASH,
+    /// The eponymous EVM instruction.
+    DIFFICULTY,
+    /// The eponymous EVM instruction.
+    COINBASE,
+    /// The eponymous EVM instruction.
+    MSIZE,
+
     /// The eponymous EVM instruction.
     BASEFEE,
+    /// The eponymous EVM instruction.
+    PC,
+    /// The eponymous EVM instruction.
+    EXTCODECOPY,
+    /// The eponymous EVM instruction.
+    SELFDESTRUCT,
 }
 
 impl From<Name> for Instruction {

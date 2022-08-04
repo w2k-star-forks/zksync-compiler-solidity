@@ -11,8 +11,8 @@ use std::collections::HashSet;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::evm::ethereal_ir::entry_link::EntryLink;
-use crate::evm::ethereal_ir::EtherealIR;
+use crate::evmla::ethereal_ir::entry_link::EntryLink;
+use crate::evmla::ethereal_ir::EtherealIR;
 
 use self::data::Data;
 use self::instruction::name::Name as InstructionName;

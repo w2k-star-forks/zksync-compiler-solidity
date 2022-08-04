@@ -2,7 +2,7 @@
 //! The `solc --standard-json` contract EVM legacy assembly source.
 //!
 
-use crate::evm::assembly::Assembly;
+use crate::evmla::assembly::Assembly;
 
 ///
 /// The `solc --standard-json` contract EVM legacy assembly source.

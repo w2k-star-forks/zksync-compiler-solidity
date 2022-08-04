@@ -2,29 +2,24 @@
 //! Translates the CODECOPY use cases.
 //!
 
-use inkwell::values::BasicValue;
-
 ///
 /// Translates the contract hash copying.
 ///
 pub fn contract_hash<'ctx, D>(
     context: &mut compiler_llvm_context::Context<'ctx, D>,
-    arguments: [inkwell::values::BasicValueEnum<'ctx>; 3],
+    offset: inkwell::values::IntValue<'ctx>,
+    value: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
 where
     D: compiler_llvm_context::Dependency,
 {
-    let offset = context
-        .builder()
-        .build_int_add(
-            arguments[0].into_int_value(),
-            context.field_const((compiler_common::SIZE_X32 + compiler_common::SIZE_FIELD) as u64),
-            "datacopy_contract_hash_offset",
-        )
-        .as_basic_value_enum();
-    let value = arguments[1];
+    let offset = context.builder().build_int_add(
+        offset,
+        context.field_const((compiler_common::SIZE_X32 + compiler_common::SIZE_FIELD) as u64),
+        "datacopy_contract_hash_offset",
+    );
 
-    compiler_llvm_context::memory::store(context, [offset, value])?;
+    compiler_llvm_context::memory::store(context, offset, value)?;
 
     Ok(None)
 }
@@ -42,10 +37,8 @@ where
 {
     compiler_llvm_context::memory::store_byte(
         context,
-        [
-            context.field_const_str_hex(offset).as_basic_value_enum(),
-            context.field_const_str_hex(value).as_basic_value_enum(),
-        ],
+        context.field_const_str_hex(offset),
+        context.field_const_str_hex(value),
     )?;
 
     Ok(None)
@@ -56,7 +49,7 @@ where
 ///
 pub fn static_data<'ctx, D>(
     context: &mut compiler_llvm_context::Context<'ctx, D>,
-    arguments: [inkwell::values::BasicValueEnum<'ctx>; 3],
+    destination: inkwell::values::IntValue<'ctx>,
     source: &str,
 ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
 where
@@ -76,18 +69,12 @@ where
         );
 
         let datacopy_destination = context.builder().build_int_add(
-            arguments[0].into_int_value(),
+            destination,
             context.field_const(offset as u64),
             format!("datacopy_destination_index_{}", index).as_str(),
         );
         let datacopy_value = context.field_const_str(value_string.as_str());
-        compiler_llvm_context::memory::store(
-            context,
-            [
-                datacopy_destination.as_basic_value_enum(),
-                datacopy_value.as_basic_value_enum(),
-            ],
-        )?;
+        compiler_llvm_context::memory::store(context, datacopy_destination, datacopy_value)?;
         offset += chunk.len() / 2;
     }
 

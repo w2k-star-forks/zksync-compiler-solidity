@@ -85,8 +85,14 @@ impl Instruction {
             Name::CALLDATALOAD => 1,
             Name::CALLDATACOPY => 3,
             Name::CODECOPY => 3,
-            Name::EXTCODESIZE => 1,
             Name::RETURNDATACOPY => 3,
+            Name::EXTCODESIZE => 1,
+            Name::EXTCODEHASH => 1,
+
+            Name::CALL => 7,
+            Name::CALLCODE => 7,
+            Name::STATICCALL => 6,
+            Name::DELEGATECALL => 6,
 
             Name::RETURN => 2,
             Name::REVERT => 2,
@@ -98,19 +104,14 @@ impl Instruction {
             Name::LOG3 => 5,
             Name::LOG4 => 6,
 
-            Name::CALL => 7,
-            Name::CALLCODE => 7,
-            Name::STATICCALL => 6,
-            Name::DELEGATECALL => 6,
-
             Name::CREATE => 3,
             Name::CREATE2 => 4,
 
             Name::BALANCE => 1,
+
             Name::BLOCKHASH => 1,
 
             Name::EXTCODECOPY => 4,
-            Name::EXTCODEHASH => 1,
 
             _ => 0,
         }
@@ -219,14 +220,9 @@ impl Instruction {
             Name::CALLDATASIZE => 1,
             Name::CODESIZE => 1,
             Name::PUSHSIZE => 1,
-            Name::EXTCODESIZE => 1,
             Name::RETURNDATASIZE => 1,
-
-            Name::ADDRESS => 1,
-            Name::CALLER => 1,
-            Name::TIMESTAMP => 1,
-            Name::NUMBER => 1,
-            Name::GAS => 1,
+            Name::EXTCODESIZE => 1,
+            Name::EXTCODEHASH => 1,
 
             Name::CALL => 1,
             Name::CALLCODE => 1,
@@ -236,19 +232,27 @@ impl Instruction {
             Name::CREATE => 1,
             Name::CREATE2 => 1,
 
-            Name::PC => 1,
+            Name::ADDRESS => 1,
+            Name::CALLER => 1,
+            Name::TIMESTAMP => 1,
+            Name::NUMBER => 1,
+
             Name::CALLVALUE => 1,
-            Name::MSIZE => 1,
+            Name::GAS => 1,
             Name::BALANCE => 1,
             Name::SELFBALANCE => 1,
-            Name::CHAINID => 1,
-            Name::ORIGIN => 1,
-            Name::BLOCKHASH => 1,
-            Name::COINBASE => 1,
-            Name::DIFFICULTY => 1,
+
             Name::GASLIMIT => 1,
+            Name::GASPRICE => 1,
+            Name::ORIGIN => 1,
+            Name::CHAINID => 1,
+            Name::BLOCKHASH => 1,
+            Name::DIFFICULTY => 1,
+            Name::COINBASE => 1,
+            Name::MSIZE => 1,
+
             Name::BASEFEE => 1,
-            Name::EXTCODEHASH => 1,
+            Name::PC => 1,
 
             _ => 0,
         }

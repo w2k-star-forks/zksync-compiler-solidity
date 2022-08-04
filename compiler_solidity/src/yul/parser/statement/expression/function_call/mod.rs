@@ -196,38 +196,67 @@ impl FunctionCall {
 
             Name::Add => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::addition(context, arguments)
+                compiler_llvm_context::arithmetic::addition(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Sub => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::subtraction(context, arguments)
+                compiler_llvm_context::arithmetic::subtraction(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Mul => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::multiplication(context, arguments)
+                compiler_llvm_context::arithmetic::multiplication(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Div => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::division(context, arguments)
+                compiler_llvm_context::arithmetic::division(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Mod => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::remainder(context, arguments)
+                compiler_llvm_context::arithmetic::remainder(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Sdiv => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::division_signed(context, arguments)
+                compiler_llvm_context::arithmetic::division_signed(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Smod => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::arithmetic::remainder_signed(context, arguments)
+                compiler_llvm_context::arithmetic::remainder_signed(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             Name::Lt => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::ULT,
                 )
             }
@@ -235,7 +264,8 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::UGT,
                 )
             }
@@ -243,7 +273,8 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::EQ,
                 )
             }
@@ -251,7 +282,8 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    [arguments[0], context.field_const(0).as_basic_value_enum()],
+                    arguments[0].into_int_value(),
+                    context.field_const(0),
                     inkwell::IntPredicate::EQ,
                 )
             }
@@ -259,7 +291,8 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::SLT,
                 )
             }
@@ -267,48 +300,75 @@ impl FunctionCall {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
                 compiler_llvm_context::comparison::compare(
                     context,
-                    arguments,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
                     inkwell::IntPredicate::SGT,
                 )
             }
 
             Name::Or => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::or(context, arguments)
+                compiler_llvm_context::bitwise::or(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Xor => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::xor(context, arguments)
+                compiler_llvm_context::bitwise::xor(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Not => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
                 compiler_llvm_context::bitwise::xor(
                     context,
-                    [
-                        arguments[0],
-                        context.field_type().const_all_ones().as_basic_value_enum(),
-                    ],
+                    arguments[0].into_int_value(),
+                    context.field_type().const_all_ones(),
                 )
             }
             Name::And => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::and(context, arguments)
+                compiler_llvm_context::bitwise::and(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Shl => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::shift_left(context, arguments)
+                compiler_llvm_context::bitwise::shift_left(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Shr => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::shift_right(context, arguments)
+                compiler_llvm_context::bitwise::shift_right(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Sar => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::shift_right_arithmetic(context, arguments)
+                compiler_llvm_context::bitwise::shift_right_arithmetic(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Byte => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::bitwise::byte(context, arguments)
+                compiler_llvm_context::bitwise::byte(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Pop => {
                 let _arguments = self.pop_arguments_llvm::<D, 1>(context)?;
@@ -317,19 +377,37 @@ impl FunctionCall {
 
             Name::AddMod => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
-                compiler_llvm_context::math::add_mod(context, arguments)
+                compiler_llvm_context::math::add_mod(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             Name::MulMod => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
-                compiler_llvm_context::math::mul_mod(context, arguments)
+                compiler_llvm_context::math::mul_mod(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             Name::Exp => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::math::exponent(context, arguments)
+                compiler_llvm_context::math::exponent(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::SignExtend => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::math::sign_extend(context, arguments)
+                compiler_llvm_context::math::sign_extend(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             Name::Keccak256 => {
@@ -343,24 +421,36 @@ impl FunctionCall {
 
             Name::MLoad => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                compiler_llvm_context::memory::load(context, arguments)
+                compiler_llvm_context::memory::load(context, arguments[0].into_int_value())
             }
             Name::MStore => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::memory::store(context, arguments)
+                compiler_llvm_context::memory::store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::MStore8 => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::memory::store_byte(context, arguments)
+                compiler_llvm_context::memory::store_byte(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
 
             Name::SLoad => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                compiler_llvm_context::storage::load(context, arguments)
+                compiler_llvm_context::storage::load(context, arguments[0].into_int_value())
             }
             Name::SStore => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::storage::store(context, arguments)
+                compiler_llvm_context::storage::store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::LoadImmutable => {
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
@@ -411,22 +501,37 @@ impl FunctionCall {
 
             Name::CallDataLoad => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                compiler_llvm_context::calldata::load(context, arguments)
+                compiler_llvm_context::calldata::load(context, arguments[0].into_int_value())
             }
             Name::CallDataSize => compiler_llvm_context::calldata::size(context),
             Name::CallDataCopy => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
-                compiler_llvm_context::calldata::copy(context, arguments)
+                compiler_llvm_context::calldata::copy(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             Name::CodeSize => compiler_llvm_context::calldata::size(context),
             Name::CodeCopy => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
-                compiler_llvm_context::calldata::copy(context, arguments)
+                compiler_llvm_context::calldata::copy(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             Name::ReturnDataSize => compiler_llvm_context::return_data::size(context),
             Name::ReturnDataCopy => {
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
-                compiler_llvm_context::return_data::copy(context, arguments)
+                compiler_llvm_context::return_data::copy(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
+                )
             }
             Name::ExtCodeSize => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
@@ -439,11 +544,19 @@ impl FunctionCall {
 
             Name::Return => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::r#return::r#return(context, arguments)
+                compiler_llvm_context::r#return::r#return(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Revert => {
                 let arguments = self.pop_arguments_llvm::<D, 2>(context)?;
-                compiler_llvm_context::r#return::revert(context, arguments)
+                compiler_llvm_context::r#return::revert(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
             }
             Name::Stop => compiler_llvm_context::r#return::stop(context),
             Name::Invalid => compiler_llvm_context::r#return::invalid(context),
@@ -628,8 +741,7 @@ impl FunctionCall {
                     ),
                     "datacopy_contract_hash_offset",
                 );
-                let value = arguments[1];
-                compiler_llvm_context::memory::store(context, [offset.as_basic_value_enum(), value])
+                compiler_llvm_context::memory::store(context, offset, arguments[1].into_int_value())
             }
 
             Name::LinkerSymbol => {
@@ -660,52 +772,9 @@ impl FunctionCall {
                 &[],
                 "caller",
             )),
-            Name::Timestamp => {
-                let meta_packed = context
-                    .build_call(
-                        context
-                            .get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::Meta),
-                        &[],
-                        "meta",
-                    )
-                    .expect("Always exists");
-                let meta_shifted = context.builder().build_right_shift(
-                    meta_packed.into_int_value(),
-                    context.field_const(compiler_common::BITLENGTH_X64 as u64),
-                    false,
-                    "meta_shifted",
-                );
-                let block_timestamp = context.builder().build_and(
-                    meta_shifted,
-                    context.field_const(u64::MAX),
-                    "block_number",
-                );
-                Ok(Some(block_timestamp.as_basic_value_enum()))
-            }
-            Name::Number => {
-                let meta_packed = context
-                    .build_call(
-                        context
-                            .get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::Meta),
-                        &[],
-                        "meta",
-                    )
-                    .expect("Always exists");
-                let block_number = context.builder().build_and(
-                    meta_packed.into_int_value(),
-                    context.field_const(u64::MAX),
-                    "block_number",
-                );
-                Ok(Some(block_number.as_basic_value_enum()))
-            }
-            Name::Origin => Ok(context.build_call(
-                context.get_intrinsic_function(compiler_llvm_context::IntrinsicFunction::TxOrigin),
-                &[],
-                "tx_origin",
-            )),
-            Name::Gas => compiler_llvm_context::ether_gas::gas(context),
-            Name::CallValue => compiler_llvm_context::ether_gas::value(context),
 
+            Name::CallValue => compiler_llvm_context::ether_gas::value(context),
+            Name::Gas => compiler_llvm_context::ether_gas::gas(context),
             Name::Balance => {
                 let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
 
@@ -727,14 +796,21 @@ impl FunctionCall {
                 compiler_llvm_context::ether_gas::balance(context, address)
             }
 
-            Name::GasLimit => Ok(Some(
-                context.field_const(u32::MAX as u64).as_basic_value_enum(),
-            )),
-            Name::MSize => Ok(Some(
-                context
-                    .field_const(((1 << 16) * compiler_common::SIZE_FIELD) as u64)
-                    .as_basic_value_enum(),
-            )),
+            Name::GasLimit => compiler_llvm_context::contract_context::gas_limit(context),
+            Name::GasPrice => compiler_llvm_context::contract_context::gas_price(context),
+            Name::Origin => compiler_llvm_context::contract_context::origin(context),
+            Name::ChainId => compiler_llvm_context::contract_context::chain_id(context),
+            Name::Timestamp => compiler_llvm_context::contract_context::block_timestamp(context),
+            Name::Number => compiler_llvm_context::contract_context::block_number(context),
+            Name::BlockHash => {
+                let arguments = self.pop_arguments_llvm::<D, 1>(context)?;
+                let index = arguments[0].into_int_value();
+
+                compiler_llvm_context::contract_context::block_hash(context, index)
+            }
+            Name::Difficulty => compiler_llvm_context::contract_context::difficulty(context),
+            Name::CoinBase => compiler_llvm_context::contract_context::coinbase(context),
+            Name::MSize => compiler_llvm_context::contract_context::msize(context),
 
             Name::Verbatim {
                 input_size,
@@ -894,12 +970,7 @@ impl FunctionCall {
                 }
             }
 
-            Name::GasPrice => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::ChainId => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::BlockHash => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::Difficulty => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::Pc => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::CoinBase => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::BaseFee => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::ExtCodeCopy => {
                 let _arguments = self.pop_arguments_llvm::<D, 4>(context)?;

@@ -7,7 +7,7 @@ pub mod bytecode;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::evm::assembly::Assembly;
+use crate::evmla::assembly::Assembly;
 
 use self::bytecode::Bytecode;
 

@@ -8,7 +8,7 @@ pub mod function;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::evm::assembly::instruction::Instruction;
+use crate::evmla::assembly::instruction::Instruction;
 
 use self::function::block::Block;
 use self::function::Function;

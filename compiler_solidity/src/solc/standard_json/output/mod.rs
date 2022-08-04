@@ -12,8 +12,8 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::dump_flag::DumpFlag;
-use crate::evm::assembly::instruction::Instruction;
-use crate::evm::assembly::Assembly;
+use crate::evmla::assembly::instruction::Instruction;
+use crate::evmla::assembly::Assembly;
 use crate::project::contract::source::Source as ProjectContractSource;
 use crate::project::contract::Contract as ProjectContract;
 use crate::project::Project;
