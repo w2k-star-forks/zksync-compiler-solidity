@@ -1,45 +1,47 @@
 # The `zksolc` changelog
 
-## Unreleased
+## [Unreleased]
 
 ### Added
 
-- better compatibility of opcodes `GASLIMIT`, `GASPRICE`, `CHAINID`, `DIFFICULTY`, `COINBASE` etc.
+- Better compatibility of opcodes `GASLIMIT`, `GASPRICE`, `CHAINID`, `DIFFICULTY`, `COINBASE` etc.
 
 ### Fixed
 
-- the check for reserved function names in variable names
-- an EVMLA stack inconsistency issue with the `GASPRICE` opcode
+- The check for reserved function names in variable names
+- An EVMLA stack inconsistency issue with the `GASPRICE` opcode
 
-## Version 1.1.3 [2022-07-16]
+## [1.1.3] - 2022-07-16
 
 ### Added
 
-- the extcodesize check before the method selector
-- the check for the latest supportable version of `solc`
-- a lot of LLVM optimizations
+- The extcodesize check before the method selector
+- The check for the latest supportable version of `solc`
+- A lot of LLVM optimizations
 
 ### Changed
 
-- the default memory allocator for MUSL to `mimalloc`
+- The default memory allocator for MUSL to `mimalloc`
 
 ### Fixed
 
-- overwriting the return data size during non-EVM far calls
-- the incorrect behavior of immutables in some cases
+- Overwriting the return data size during non-EVM far calls
+- The incorrect behavior of immutables in some cases
 
-## Version 1.1.2 [2022-07-01]
+## [1.1.2] - 2022-07-01
 
 ### Changed
 
-- the exponentiation algorithm from linear to binary
+- The exponentiation algorithm from linear to binary
 
-## Version 1.1.1 [2022-06-24]
+## [1.1.1] - 2022-06-24
 
 ### Fixed
 
-- the evaluation order of event indexed fields
+- The evaluation order of event indexed fields
 
-## Version 1.1.0 [2022-06-21]
+## [1.1.0] - 2022-06-21
 
-*Initial release*
+### Added
+
+- Initial release
