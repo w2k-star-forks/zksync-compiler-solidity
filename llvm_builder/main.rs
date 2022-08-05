@@ -39,6 +39,12 @@ fn main_wrapper() -> anyhow::Result<()> {
     } else {
         utils::command(
             Command::new("git")
+                .current_dir(llvm_path.as_path())
+                .args(&["fetch", "--all", "--tags"]),
+            "LLVM checking out",
+        )?;
+        utils::command(
+            Command::new("git")
                 .current_dir(llvm_path)
                 .args(&["checkout", llvm_tag.as_str()]),
             "LLVM checking out",
