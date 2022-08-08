@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.4] - 2022-08-08
+
 ### Added
 
 - Better compatibility of opcodes `GASLIMIT`, `GASPRICE`, `CHAINID`, `DIFFICULTY`, `COINBASE` etc.
