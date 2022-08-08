@@ -109,6 +109,7 @@ jobs:
 
       - name: Emulate pushing to remote branch
         run: |
+          chmod -R +x releases/
           cp -R releases/* public_repo/
           cd public_repo
           git config --global user.email "dev-robot@matterlabs.dev"
