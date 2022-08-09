@@ -21,6 +21,9 @@ pub fn build() -> anyhow::Result<()> {
             "./compiler-llvm/build/",
             "-G",
             "Ninja",
+            "-DPACKAGE_VENDOR='Matter Labs'",
+            "-DCLANG_VENDOR='Matter Labs'",
+            "-DCLANG_REPOSITORY_STRING='origin'",
             format!(
                 "-DCMAKE_INSTALL_PREFIX={}",
                 install_directory.to_string_lossy()
