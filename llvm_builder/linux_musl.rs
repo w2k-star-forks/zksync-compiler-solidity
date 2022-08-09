@@ -170,6 +170,9 @@ fn build_crt(build_directory: &Path, install_directory: &Path) -> anyhow::Result
             build_directory.to_string_lossy().as_ref(),
             "-G",
             "Ninja",
+            "-DPACKAGE_VENDOR='Matter Labs'",
+            "-DCLANG_VENDOR='Matter Labs'",
+            "-DCLANG_REPOSITORY_STRING='origin'",
             format!(
                 "-DCMAKE_INSTALL_PREFIX={}",
                 install_directory.to_string_lossy()
@@ -230,6 +233,9 @@ fn build_host(
             build_directory.to_string_lossy().as_ref(),
             "-G",
             "Ninja",
+            "-DPACKAGE_VENDOR='Matter Labs'",
+            "-DCLANG_VENDOR='Matter Labs'",
+            "-DCLANG_REPOSITORY_STRING='origin'",
             format!(
                 "-DDEFAULT_SYSROOT={}",
                 musl_install_directory.to_string_lossy()
@@ -332,6 +338,9 @@ fn build_target(
             build_directory.to_string_lossy().as_ref(),
             "-G",
             "Ninja",
+            "-DPACKAGE_VENDOR='Matter Labs'",
+            "-DCLANG_VENDOR='Matter Labs'",
+            "-DCLANG_REPOSITORY_STRING='origin'",
             "-DBUILD_SHARED_LIBS='Off'",
             format!(
                 "-DCMAKE_INSTALL_PREFIX={}",
