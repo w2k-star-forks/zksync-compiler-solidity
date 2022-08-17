@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2022-08-16
+
+### Added
+
+- Support for the `BASEFEE` instruction
+- Support for solc v0.8.16
+
 ## [1.1.4] - 2022-08-08
 
 ### Added

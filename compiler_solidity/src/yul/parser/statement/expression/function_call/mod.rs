@@ -810,6 +810,7 @@ impl FunctionCall {
             }
             Name::Difficulty => compiler_llvm_context::contract_context::difficulty(context),
             Name::CoinBase => compiler_llvm_context::contract_context::coinbase(context),
+            Name::BaseFee => compiler_llvm_context::contract_context::basefee(context),
             Name::MSize => compiler_llvm_context::contract_context::msize(context),
 
             Name::Verbatim {
@@ -971,7 +972,6 @@ impl FunctionCall {
             }
 
             Name::Pc => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::BaseFee => Ok(Some(context.field_const(0).as_basic_value_enum())),
             Name::ExtCodeCopy => {
                 let _arguments = self.pop_arguments_llvm::<D, 4>(context)?;
                 Ok(None)

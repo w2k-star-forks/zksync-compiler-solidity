@@ -1011,9 +1011,9 @@ where
                 compiler_llvm_context::contract_context::difficulty(context)
             }
             InstructionName::COINBASE => compiler_llvm_context::contract_context::coinbase(context),
+            InstructionName::BASEFEE => compiler_llvm_context::contract_context::basefee(context),
             InstructionName::MSIZE => compiler_llvm_context::contract_context::msize(context),
 
-            InstructionName::BASEFEE => Ok(Some(context.field_const(0).as_basic_value_enum())),
             InstructionName::PC => Ok(Some(context.field_const(0).as_basic_value_enum())),
             InstructionName::EXTCODECOPY => {
                 let _arguments = self.pop_arguments_llvm(context);
