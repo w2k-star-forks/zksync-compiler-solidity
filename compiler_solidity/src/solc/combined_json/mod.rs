@@ -21,8 +21,11 @@ use self::contract::Contract;
 pub struct CombinedJson {
     /// The contract entries.
     pub contracts: BTreeMap<String, Contract>,
-    /// The compiler version.
+    /// The `solc` compiler version.
     pub version: String,
+    /// The `zksolc` compiler version.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zk_version: Option<String>,
 }
 
 impl CombinedJson {

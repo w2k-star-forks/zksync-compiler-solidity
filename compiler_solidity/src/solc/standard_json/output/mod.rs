@@ -39,6 +39,12 @@ pub struct Output {
     /// The compilation errors and warnings.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<SolcStandardJsonOutputError>>,
+    /// The `solc` compiler version.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// The `zksolc` compiler version.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zk_version: Option<String>,
 }
 
 impl Output {
@@ -49,7 +55,7 @@ impl Output {
         &mut self,
         libraries: BTreeMap<String, BTreeMap<String, String>>,
         pipeline: SolcPipeline,
-        version: semver::Version,
+        version: &semver::Version,
         dump_flags: &[DumpFlag],
     ) -> anyhow::Result<Project> {
         self.preprocess_ast()?;
@@ -115,7 +121,11 @@ impl Output {
             }
         }
 
-        Ok(Project::new(version, project_contracts, libraries))
+        Ok(Project::new(
+            version.to_owned(),
+            project_contracts,
+            libraries,
+        ))
     }
 
     ///

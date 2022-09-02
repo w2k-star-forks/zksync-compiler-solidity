@@ -7,6 +7,7 @@
 ### Added
 
 - Better compiler errors for the Yul mode
+- The compiler versions to all output JSONs
 
 ### Changed
 
