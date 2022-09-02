@@ -13,9 +13,13 @@ pub mod object;
 pub mod switch;
 pub mod variable_declaration;
 
-use crate::yul::lexer::lexeme::keyword::Keyword;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::keyword::Keyword;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 
 use self::assignment::Assignment;
 use self::block::Block;
@@ -54,11 +58,11 @@ pub enum Statement {
     /// The `for` statement.
     ForLoop(ForLoop),
     /// The `continue` statement.
-    Continue,
+    Continue(Location),
     /// The `break` statement.
-    Break,
+    Break(Location),
     /// The `leave` statement.
-    Leave,
+    Leave(Location),
 }
 
 impl Statement {
@@ -67,48 +71,93 @@ impl Statement {
     ///
     pub fn parse(
         lexer: &mut Lexer,
-        initial: Option<Lexeme>,
-    ) -> anyhow::Result<(Self, Option<Lexeme>)> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+        initial: Option<Token>,
+    ) -> Result<(Self, Option<Token>), Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
-        match lexeme {
-            lexeme @ Lexeme::Keyword(Keyword::Object) => {
-                Ok((Statement::Object(Object::parse(lexer, Some(lexeme))?), None))
-            }
-            Lexeme::Keyword(Keyword::Code) => {
-                Ok((Statement::Code(Code::parse(lexer, None)?), None))
-            }
-            Lexeme::Keyword(Keyword::Function) => Ok((
+        match token {
+            token @ Token {
+                lexeme: Lexeme::Keyword(Keyword::Object),
+                ..
+            } => Ok((Statement::Object(Object::parse(lexer, Some(token))?), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Code),
+                ..
+            } => Ok((Statement::Code(Code::parse(lexer, None)?), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Function),
+                ..
+            } => Ok((
                 Statement::FunctionDefinition(FunctionDefinition::parse(lexer, None)?),
                 None,
             )),
-            Lexeme::Keyword(Keyword::Let) => {
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Let),
+                ..
+            } => {
                 let (statement, next) = VariableDeclaration::parse(lexer, None)?;
                 Ok((Statement::VariableDeclaration(statement), next))
             }
-            Lexeme::Keyword(Keyword::If) => Ok((
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::If),
+                ..
+            } => Ok((
                 Statement::IfConditional(IfConditional::parse(lexer, None)?),
                 None,
             )),
-            Lexeme::Keyword(Keyword::Switch) => {
-                Ok((Statement::Switch(Switch::parse(lexer, None)?), None))
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Switch),
+                ..
+            } => Ok((Statement::Switch(Switch::parse(lexer, None)?), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::For),
+                ..
+            } => Ok((Statement::ForLoop(ForLoop::parse(lexer, None)?), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Continue),
+                location,
+                ..
+            } => Ok((Statement::Continue(location), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Break),
+                location,
+                ..
+            } => Ok((Statement::Break(location), None)),
+            Token {
+                lexeme: Lexeme::Keyword(Keyword::Leave),
+                location,
+                ..
+            } => Ok((Statement::Leave(location), None)),
+            token => Err(ParserError::InvalidToken {
+                location: token.location,
+                expected: vec![
+                    "object", "code", "function", "let", "if", "switch", "for", "continue",
+                    "break", "leave",
+                ],
+                found: token.lexeme.to_string(),
             }
-            Lexeme::Keyword(Keyword::For) => {
-                Ok((Statement::ForLoop(ForLoop::parse(lexer, None)?), None))
-            }
-            Lexeme::Keyword(Keyword::Continue) => Ok((Statement::Continue, None)),
-            Lexeme::Keyword(Keyword::Break) => Ok((Statement::Break, None)),
-            Lexeme::Keyword(Keyword::Leave) => Ok((Statement::Leave, None)),
-            lexeme => {
-                anyhow::bail!(
-                    "Expected one of {:?}, found `{}`",
-                    [
-                        "object", "code", "function", "let", "if", "switch", "for", "continue",
-                        "break", "leave",
-                    ],
-                    lexeme
-                );
-            }
+            .into()),
+        }
+    }
+
+    ///
+    /// Returns the statement location.
+    ///
+    pub fn location(&self) -> Location {
+        match self {
+            Self::Object(inner) => inner.location,
+            Self::Code(inner) => inner.location,
+            Self::Block(inner) => inner.location,
+            Self::Expression(inner) => inner.location(),
+            Self::FunctionDefinition(inner) => inner.location,
+            Self::VariableDeclaration(inner) => inner.location,
+            Self::Assignment(inner) => inner.location,
+            Self::IfConditional(inner) => inner.location,
+            Self::Switch(inner) => inner.location,
+            Self::ForLoop(inner) => inner.location,
+            Self::Continue(location) => *location,
+            Self::Break(location) => *location,
+            Self::Leave(location) => *location,
         }
     }
 }

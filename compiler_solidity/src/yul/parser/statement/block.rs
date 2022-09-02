@@ -2,9 +2,13 @@
 //! The source code block.
 //!
 
-use crate::yul::lexer::lexeme::symbol::Symbol;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::symbol::Symbol;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::assignment::Assignment;
 use crate::yul::parser::statement::expression::Expression;
 use crate::yul::parser::statement::Statement;
@@ -14,6 +18,8 @@ use crate::yul::parser::statement::Statement;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Block {
+    /// The location.
+    pub location: Location,
     /// The block statements.
     pub statements: Vec<Statement>,
 }
@@ -22,61 +28,95 @@ impl Block {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
         let mut statements = Vec::new();
 
-        match lexeme {
-            Lexeme::Symbol(Symbol::BracketCurlyLeft) => {}
-            lexeme => anyhow::bail!("Expected one of {:?}, found `{}`", ["{"], lexeme),
-        }
+        let location = match token {
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::BracketCurlyLeft),
+                location,
+                ..
+            } => location,
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["{"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
+            }
+        };
 
         let mut remaining = None;
 
         loop {
             match crate::yul::parser::take_or_next(remaining.take(), lexer)? {
-                lexeme @ Lexeme::Keyword(_) => {
-                    let (statement, next) = Statement::parse(lexer, Some(lexeme))?;
+                token @ Token {
+                    lexeme: Lexeme::Keyword(_),
+                    ..
+                } => {
+                    let (statement, next) = Statement::parse(lexer, Some(token))?;
                     remaining = next;
                     statements.push(statement);
                 }
-                lexeme @ Lexeme::Literal(_) => {
+                token @ Token {
+                    lexeme: Lexeme::Literal(_),
+                    ..
+                } => {
                     statements
-                        .push(Expression::parse(lexer, Some(lexeme)).map(Statement::Expression)?);
+                        .push(Expression::parse(lexer, Some(token)).map(Statement::Expression)?);
                 }
-                lexeme @ Lexeme::Identifier(_) => match lexer.peek()? {
-                    Lexeme::Symbol(Symbol::Assignment) => {
+                token @ Token {
+                    lexeme: Lexeme::Identifier(_),
+                    ..
+                } => match lexer.peek()? {
+                    Token {
+                        lexeme: Lexeme::Symbol(Symbol::Assignment),
+                        ..
+                    } => {
                         statements.push(
-                            Assignment::parse(lexer, Some(lexeme)).map(Statement::Assignment)?,
+                            Assignment::parse(lexer, Some(token)).map(Statement::Assignment)?,
                         );
                     }
-                    Lexeme::Symbol(Symbol::Comma) => {
+                    Token {
+                        lexeme: Lexeme::Symbol(Symbol::Comma),
+                        ..
+                    } => {
                         statements.push(
-                            Assignment::parse(lexer, Some(lexeme)).map(Statement::Assignment)?,
+                            Assignment::parse(lexer, Some(token)).map(Statement::Assignment)?,
                         );
                     }
                     _ => {
                         statements.push(
-                            Expression::parse(lexer, Some(lexeme)).map(Statement::Expression)?,
+                            Expression::parse(lexer, Some(token)).map(Statement::Expression)?,
                         );
                     }
                 },
-                lexeme @ Lexeme::Symbol(Symbol::BracketCurlyLeft) => {
-                    statements.push(Block::parse(lexer, Some(lexeme)).map(Statement::Block)?)
-                }
-                Lexeme::Symbol(Symbol::BracketCurlyRight) => break,
-                lexeme => {
-                    anyhow::bail!(
-                        "Expected one of {:?}, found `{}`",
-                        ["{keyword}", "{expression}", "{identifier}", "{", "}"],
-                        lexeme
-                    );
+                token @ Token {
+                    lexeme: Lexeme::Symbol(Symbol::BracketCurlyLeft),
+                    ..
+                } => statements.push(Block::parse(lexer, Some(token)).map(Statement::Block)?),
+                Token {
+                    lexeme: Lexeme::Symbol(Symbol::BracketCurlyRight),
+                    ..
+                } => break,
+                token => {
+                    return Err(ParserError::InvalidToken {
+                        location: token.location,
+                        expected: vec!["{keyword}", "{expression}", "{identifier}", "{", "}"],
+                        found: token.lexeme.to_string(),
+                    }
+                    .into());
                 }
             }
         }
 
-        Ok(Self { statements })
+        Ok(Self {
+            location,
+            statements,
+        })
     }
 }
 
@@ -124,22 +164,101 @@ where
                 Statement::IfConditional(statement) => statement.into_llvm(context)?,
                 Statement::Switch(statement) => statement.into_llvm(context)?,
                 Statement::ForLoop(statement) => statement.into_llvm(context)?,
-                Statement::Continue => {
+                Statement::Continue(_location) => {
                     context.build_unconditional_branch(context.r#loop().continue_block);
                     break;
                 }
-                Statement::Break => {
+                Statement::Break(_location) => {
                     context.build_unconditional_branch(context.r#loop().join_block);
                     break;
                 }
-                Statement::Leave => {
+                Statement::Leave(_location) => {
                     context.build_unconditional_branch(context.function().return_block);
                     break;
                 }
-                statement => anyhow::bail!("Unexpected local statement: {:?}", statement),
+                statement => anyhow::bail!(
+                    "{} Unexpected local statement: {:?}",
+                    statement.location(),
+                    statement
+                ),
             }
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yul::lexer::token::location::Location;
+    use crate::yul::lexer::Lexer;
+    use crate::yul::parser::error::Error;
+    use crate::yul::parser::statement::object::Object;
+
+    #[test]
+    fn error_invalid_token_bracket_curly_left() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                (
+                    return(0, 0)
+                }
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(11, 17),
+                expected: vec!["{keyword}", "{expression}", "{identifier}", "{", "}"],
+                found: "(".to_owned(),
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_token_statement() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                :=
+                return(0, 0)
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(11, 17),
+                expected: vec!["{keyword}", "{expression}", "{identifier}", "{", "}"],
+                found: ":=".to_owned(),
+            }
+            .into())
+        );
     }
 }

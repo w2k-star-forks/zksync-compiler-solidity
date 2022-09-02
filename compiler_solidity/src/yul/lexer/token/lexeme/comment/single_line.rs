@@ -2,6 +2,10 @@
 //! The single-line comment lexeme.
 //!
 
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
+
 ///
 /// The single-line comment lexeme.
 ///
@@ -17,8 +21,10 @@ impl Comment {
     ///
     /// Returns the comment's length, including the trimmed whitespace around it.
     ///
-    pub fn parse(input: &str) -> usize {
+    pub fn parse(input: &str) -> Token {
         let end_position = input.find(Self::END).unwrap_or(input.len());
-        end_position + Self::END.len()
+        let length = end_position + Self::END.len();
+
+        Token::new(Location::new(1, 1), Lexeme::Comment, length)
     }
 }

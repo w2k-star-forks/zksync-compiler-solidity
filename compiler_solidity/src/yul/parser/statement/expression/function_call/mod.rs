@@ -7,9 +7,13 @@ pub mod name;
 use inkwell::types::BasicType;
 use inkwell::values::BasicValue;
 
-use crate::yul::lexer::lexeme::symbol::Symbol;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::symbol::Symbol;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::expression::Expression;
 
 use self::name::Name;
@@ -19,6 +23,8 @@ use self::name::Name;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionCall {
+    /// The location.
+    pub location: Location,
     /// The function name.
     pub name: Name,
     /// The function arguments expression list.
@@ -29,31 +35,49 @@ impl FunctionCall {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
-        let name = match lexeme {
-            Lexeme::Identifier(identifier) => Name::from(identifier.as_str()),
-            lexeme => {
-                anyhow::bail!("Expected one of {:?}, found `{}`", ["{identifier}"], lexeme);
+        let (location, name) = match token {
+            Token {
+                lexeme: Lexeme::Identifier(identifier),
+                location,
+                ..
+            } => (location, Name::from(identifier.inner.as_str())),
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["{identifier}"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
             }
         };
 
         let mut arguments = Vec::new();
         loop {
             let argument = match lexer.next()? {
-                Lexeme::Symbol(Symbol::ParenthesisRight) => break,
-                lexeme => Expression::parse(lexer, Some(lexeme))?,
+                Token {
+                    lexeme: Lexeme::Symbol(Symbol::ParenthesisRight),
+                    ..
+                } => break,
+                token => Expression::parse(lexer, Some(token))?,
             };
 
             arguments.push(argument);
 
             match lexer.peek()? {
-                Lexeme::Symbol(Symbol::Comma) => {
+                Token {
+                    lexeme: Lexeme::Symbol(Symbol::Comma),
+                    ..
+                } => {
                     lexer.next()?;
                     continue;
                 }
-                Lexeme::Symbol(Symbol::ParenthesisRight) => {
+                Token {
+                    lexeme: Lexeme::Symbol(Symbol::ParenthesisRight),
+                    ..
+                } => {
                     lexer.next()?;
                     break;
                 }
@@ -61,7 +85,11 @@ impl FunctionCall {
             }
         }
 
-        Ok(Self { name, arguments })
+        Ok(Self {
+            location,
+            name,
+            arguments,
+        })
     }
 
     ///
@@ -74,6 +102,8 @@ impl FunctionCall {
     where
         D: compiler_llvm_context::Dependency,
     {
+        let location = self.location;
+
         match self.name {
             Name::UserDefined(name)
                 if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) =>
@@ -87,7 +117,9 @@ impl FunctionCall {
                     .functions
                     .get(name.as_str())
                     .cloned()
-                    .unwrap_or_else(|| panic!("Undeclared function {}", name));
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("{} Undeclared function `{}`", location, name)
+                    })?;
 
                 if let Some(compiler_llvm_context::FunctionReturn::Compound { size, .. }) =
                     function.r#return
@@ -117,7 +149,8 @@ impl FunctionCall {
 
                 if function.value.count_params() as usize != (values.len() - 2) {
                     anyhow::bail!(
-                        "Function `{}` expected {} arguments, found {}",
+                        "{} Function `{}` expected {} arguments, found {}",
+                        location,
                         name,
                         function.value.count_params(),
                         values.len()
@@ -153,7 +186,9 @@ impl FunctionCall {
                     .functions
                     .get(name.as_str())
                     .cloned()
-                    .unwrap_or_else(|| panic!("Undeclared function {}", name));
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("{} Undeclared function `{}`", location, name)
+                    })?;
 
                 if let Some(compiler_llvm_context::FunctionReturn::Compound { size, .. }) =
                     function.r#return
@@ -169,7 +204,8 @@ impl FunctionCall {
 
                 if function.value.count_params() as usize != values.len() {
                     anyhow::bail!(
-                        "Function `{}` expected {} arguments, found {}",
+                        "{} Function `{}` expected {} arguments, found {}",
+                        location,
                         name,
                         function.value.count_params(),
                         values.len()
@@ -454,10 +490,9 @@ impl FunctionCall {
             }
             Name::LoadImmutable => {
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
-                let key = arguments[0]
-                    .original
-                    .take()
-                    .ok_or_else(|| anyhow::anyhow!("`load_immutable` literal is missing"))?;
+                let key = arguments[0].original.take().ok_or_else(|| {
+                    anyhow::anyhow!("{} `load_immutable` literal is missing", location)
+                })?;
 
                 if key.as_str() == "library_deploy_address" {
                     return Ok(context.build_call(
@@ -470,7 +505,12 @@ impl FunctionCall {
                 }
 
                 let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                    anyhow::anyhow!(
+                        "{} Found a non-numeric immutable index {}: {}",
+                        location,
+                        key,
+                        error
+                    )
                 })?;
                 let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
                 let index = context.field_const(key_normalized);
@@ -478,17 +518,21 @@ impl FunctionCall {
             }
             Name::SetImmutable => {
                 let mut arguments = self.pop_arguments::<D, 3>(context)?;
-                let key = arguments[1]
-                    .original
-                    .take()
-                    .ok_or_else(|| anyhow::anyhow!("`load_immutable` literal is missing"))?;
+                let key = arguments[1].original.take().ok_or_else(|| {
+                    anyhow::anyhow!("{} `load_immutable` literal is missing", location)
+                })?;
 
                 if key.as_str() == "library_deploy_address" {
                     return Ok(None);
                 }
 
                 let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
+                    anyhow::anyhow!(
+                        "{} Found a non-numeric immutable index {}: {}",
+                        location,
+                        key,
+                        error
+                    )
                 })?;
                 let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
                 context
@@ -718,18 +762,16 @@ impl FunctionCall {
             }
             Name::DataOffset => {
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
-                let identifier = arguments[0]
-                    .original
-                    .take()
-                    .ok_or_else(|| anyhow::anyhow!("`dataoffset` object identifier is missing"))?;
+                let identifier = arguments[0].original.take().ok_or_else(|| {
+                    anyhow::anyhow!("{} `dataoffset` object identifier is missing", location)
+                })?;
                 compiler_llvm_context::create::contract_hash(context, identifier)
             }
             Name::DataSize => {
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
-                let identifier = arguments[0]
-                    .original
-                    .take()
-                    .ok_or_else(|| anyhow::anyhow!("`dataoffset` object identifier is missing"))?;
+                let identifier = arguments[0].original.take().ok_or_else(|| {
+                    anyhow::anyhow!("{} `dataoffset` object identifier is missing", location)
+                })?;
                 compiler_llvm_context::create::header_size(context, identifier)
             }
             Name::DataCopy => {
@@ -746,10 +788,9 @@ impl FunctionCall {
 
             Name::LinkerSymbol => {
                 let mut arguments = self.pop_arguments::<D, 1>(context)?;
-                let path = arguments[0]
-                    .original
-                    .take()
-                    .ok_or_else(|| anyhow::anyhow!("Linker symbol literal is missing"))?;
+                let path = arguments[0].original.take().ok_or_else(|| {
+                    anyhow::anyhow!("{} Linker symbol literal is missing", location)
+                })?;
 
                 Ok(Some(
                     context
@@ -810,6 +851,7 @@ impl FunctionCall {
             }
             Name::Difficulty => compiler_llvm_context::contract_context::difficulty(context),
             Name::CoinBase => compiler_llvm_context::contract_context::coinbase(context),
+            Name::BaseFee => compiler_llvm_context::contract_context::basefee(context),
             Name::MSize => compiler_llvm_context::contract_context::msize(context),
 
             Name::Verbatim {
@@ -818,7 +860,8 @@ impl FunctionCall {
             } => {
                 if output_size > 1 {
                     anyhow::bail!(
-                        "Verbatim instructions with multiple return values are not supported"
+                        "{} Verbatim instructions with multiple return values are not supported",
+                        location
                     );
                 }
 
@@ -826,13 +869,14 @@ impl FunctionCall {
                 let identifier = arguments[0]
                     .original
                     .take()
-                    .ok_or_else(|| anyhow::anyhow!("Verbatim literal is missing"))?;
+                    .ok_or_else(|| anyhow::anyhow!("{} Verbatim literal is missing", location))?;
                 match identifier.as_str() {
                     identifier @ "to_l1" => {
                         const ARGUMENTS_COUNT: usize = 3;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -852,7 +896,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 0;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -865,7 +910,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 2;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -884,7 +930,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 0;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -897,7 +944,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 3;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -917,7 +965,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 5;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -939,7 +988,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 1;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -957,7 +1007,8 @@ impl FunctionCall {
                         const ARGUMENTS_COUNT: usize = 0;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
-                                "Internal function `{}` expected {} arguments, found {}",
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
                                 identifier,
                                 ARGUMENTS_COUNT,
                                 input_size
@@ -966,19 +1017,28 @@ impl FunctionCall {
 
                         compiler_llvm_context::verbatim::throw(context)
                     }
-                    identifier => anyhow::bail!("Found unknown internal function `{}`", identifier),
+                    identifier => anyhow::bail!(
+                        "{} Found unknown internal function `{}`",
+                        location,
+                        identifier
+                    ),
                 }
             }
 
-            Name::Pc => Ok(Some(context.field_const(0).as_basic_value_enum())),
-            Name::BaseFee => Ok(Some(context.field_const(0).as_basic_value_enum())),
+            Name::Pc => anyhow::bail!("{} The `PC` instruction is not supported", location),
             Name::ExtCodeCopy => {
                 let _arguments = self.pop_arguments_llvm::<D, 4>(context)?;
-                Ok(None)
+                anyhow::bail!(
+                    "{} The `EXTCODECOPY` instruction is not supported",
+                    location
+                )
             }
             Name::SelfDestruct => {
                 let _arguments = self.pop_arguments_llvm::<D, 1>(context)?;
-                Ok(None)
+                anyhow::bail!(
+                    "{} The `SELFDESTRUCT` instruction is not supported",
+                    location
+                )
             }
         }
     }

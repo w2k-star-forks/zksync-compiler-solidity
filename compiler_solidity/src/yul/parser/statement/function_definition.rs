@@ -4,19 +4,26 @@
 
 use inkwell::types::BasicType;
 
-use crate::yul::lexer::lexeme::symbol::Symbol;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::symbol::Symbol;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::identifier::Identifier;
 use crate::yul::parser::statement::block::Block;
+use crate::yul::parser::statement::expression::function_call::name::Name as FunctionName;
 
 ///
 /// The function definition statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionDefinition {
-    /// The function name.
-    pub name: String,
+    /// The location.
+    pub location: Location,
+    /// The function identifier.
+    pub identifier: String,
     /// The function formal arguments.
     pub arguments: Vec<Identifier>,
     /// The function return variables.
@@ -29,55 +36,124 @@ impl FunctionDefinition {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
-        let name = match lexeme {
-            Lexeme::Identifier(name) => name,
-            lexeme => {
-                anyhow::bail!("Expected one of {:?}, found `{}`", ["{identifier}"], lexeme);
+        let (location, identifier) = match token {
+            Token {
+                lexeme: Lexeme::Identifier(identifier),
+                location,
+                ..
+            } => (location, identifier),
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["{identifier}"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
             }
         };
 
+        match FunctionName::from(identifier.inner.as_str()) {
+            FunctionName::UserDefined(_) => {}
+            _function_name => {
+                return Err(ParserError::ReservedIdentifier {
+                    location,
+                    identifier: identifier.inner,
+                }
+                .into())
+            }
+        }
+
         match lexer.next()? {
-            Lexeme::Symbol(Symbol::ParenthesisLeft) => {}
-            lexeme => anyhow::bail!("Expected one of {:?}, found `{}`", ["("], lexeme),
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::ParenthesisLeft),
+                ..
+            } => {}
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["("],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
+            }
         }
 
         let (mut arguments, next) = Identifier::parse_typed_list(lexer, None)?;
-        if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX) {
+        if identifier
+            .inner
+            .contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_PREFIX)
+        {
             if arguments.is_empty() {
-                anyhow::bail!("The `{}` function must have at least one argument", name);
+                return Err(ParserError::InvalidNumberOfArguments {
+                    location,
+                    identifier: identifier.inner,
+                    expected: 1,
+                    found: arguments.len(),
+                }
+                .into());
             }
 
             arguments.remove(0);
         }
-        if name.contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_EXCEPTION_HANDLER)
+        if identifier
+            .inner
+            .contains(compiler_llvm_context::Function::ZKSYNC_NEAR_CALL_ABI_EXCEPTION_HANDLER)
             && !arguments.is_empty()
         {
-            anyhow::bail!("The `{}` function cannot have arguments", name);
+            return Err(ParserError::InvalidNumberOfArguments {
+                location,
+                identifier: identifier.inner,
+                expected: 0,
+                found: arguments.len(),
+            }
+            .into());
         }
 
         match crate::yul::parser::take_or_next(next, lexer)? {
-            Lexeme::Symbol(Symbol::ParenthesisRight) => {}
-            lexeme => anyhow::bail!("Expected one of {:?}, found `{}`", [")"], lexeme),
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::ParenthesisRight),
+                ..
+            } => {}
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec![")"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
+            }
         }
 
         let (result, next) = match lexer.peek()? {
-            Lexeme::Symbol(Symbol::Arrow) => {
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::Arrow),
+                ..
+            } => {
                 lexer.next()?;
                 Identifier::parse_typed_list(lexer, None)?
             }
-            Lexeme::Symbol(Symbol::BracketCurlyLeft) => (vec![], None),
-            lexeme => {
-                anyhow::bail!("Expected one of {:?}, found `{}`", ["->", "{"], lexeme);
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::BracketCurlyLeft),
+                ..
+            } => (vec![], None),
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["->", "{"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
             }
         };
 
         let body = Block::parse(lexer, next)?;
 
         Ok(Self {
-            name,
+            location,
+            identifier: identifier.inner,
             arguments,
             result,
             body,
@@ -94,7 +170,7 @@ where
             .arguments
             .iter()
             .map(|argument| {
-                let yul_type = argument.yul_type.to_owned().unwrap_or_default();
+                let yul_type = argument.r#type.to_owned().unwrap_or_default();
                 yul_type.into_llvm(context).as_basic_type_enum()
             })
             .collect();
@@ -102,7 +178,7 @@ where
         let function_type = context.function_type(self.result.len(), argument_types);
 
         context.add_function(
-            self.name.as_str(),
+            self.identifier.as_str(),
             function_type,
             Some(inkwell::module::Linkage::Private),
         );
@@ -110,7 +186,7 @@ where
         if self.result.len() > 1 {
             let function = context
                 .functions
-                .get(self.name.as_str())
+                .get(self.identifier.as_str())
                 .cloned()
                 .expect("Always exists");
             let pointer = function
@@ -131,7 +207,7 @@ where
     fn into_llvm(mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         let function = context
             .functions
-            .get(self.name.as_str())
+            .get(self.identifier.as_str())
             .cloned()
             .expect("Function always exists");
         context.set_function(function.clone());
@@ -163,20 +239,20 @@ where
                     context
                         .function_mut()
                         .stack
-                        .insert(identifier.name.clone(), pointer);
+                        .insert(identifier.inner.clone(), pointer);
                 }
                 r#return
             }
             None => {
                 if let Some(identifier) = self.result.pop() {
-                    let r#type = identifier.yul_type.unwrap_or_default();
+                    let r#type = identifier.r#type.unwrap_or_default();
                     let pointer =
                         context.build_alloca(r#type.clone().into_llvm(context), "return_pointer");
                     context.build_store(pointer, r#type.into_llvm(context).const_zero());
                     context
                         .function_mut()
                         .stack
-                        .insert(identifier.name, pointer);
+                        .insert(identifier.inner, pointer);
                     compiler_llvm_context::FunctionReturn::primitive(pointer)
                 } else {
                     compiler_llvm_context::FunctionReturn::none()
@@ -188,16 +264,16 @@ where
             .arguments
             .iter()
             .map(|argument| {
-                let yul_type = argument.yul_type.to_owned().unwrap_or_default();
+                let yul_type = argument.r#type.to_owned().unwrap_or_default();
                 yul_type.into_llvm(context)
             })
             .collect();
         for (mut index, argument) in self.arguments.iter().enumerate() {
-            let pointer = context.build_alloca(argument_types[index], argument.name.as_str());
+            let pointer = context.build_alloca(argument_types[index], argument.inner.as_str());
             context
                 .function_mut()
                 .stack
-                .insert(argument.name.clone(), pointer);
+                .insert(argument.inner.clone(), pointer);
             if let Some(compiler_llvm_context::FunctionReturn::Compound { .. }) =
                 context.function().r#return
             {
@@ -244,5 +320,266 @@ where
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yul::lexer::token::location::Location;
+    use crate::yul::lexer::Lexer;
+    use crate::yul::parser::error::Error;
+    use crate::yul::parser::statement::object::Object;
+
+    #[test]
+    fn error_invalid_token_identifier() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function 256() -> result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(14, 22),
+                expected: vec!["{identifier}"],
+                found: "256".to_owned(),
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_token_parenthesis_left() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function test{) -> result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(14, 26),
+                expected: vec!["("],
+                found: "{".to_owned(),
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_token_parenthesis_right() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function test(} -> result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(14, 27),
+                expected: vec![")"],
+                found: "}".to_owned(),
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_token_arrow_or_bracket_curly_left() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function test() := result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(14, 29),
+                expected: vec!["->", "{"],
+                found: ":=".to_owned(),
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_number_of_arguments_near_call_abi() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function ZKSYNC_NEAR_CALL_test() -> result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidNumberOfArguments {
+                location: Location::new(14, 22),
+                identifier: "ZKSYNC_NEAR_CALL_test".to_owned(),
+                expected: 1,
+                found: 0,
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_invalid_number_of_arguments_near_call_abi_catch() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function ZKSYNC_CATCH_NEAR_CALL(length) {
+                revert(0, length)
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidNumberOfArguments {
+                location: Location::new(14, 22),
+                identifier: "ZKSYNC_CATCH_NEAR_CALL".to_owned(),
+                expected: 0,
+                found: 1,
+            }
+            .into())
+        );
+    }
+
+    #[test]
+    fn error_reserved_identifier() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                return(0, 0)
+            }
+
+            function basefee() -> result {
+                result := 42
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::ReservedIdentifier {
+                location: Location::new(14, 22),
+                identifier: "basefee".to_owned()
+            }
+            .into())
+        );
     }
 }

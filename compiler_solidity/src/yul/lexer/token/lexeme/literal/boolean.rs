@@ -2,9 +2,7 @@
 //! The boolean literal lexeme.
 //!
 
-use std::fmt;
-
-use crate::yul::lexer::lexeme::keyword::Keyword;
+use crate::yul::lexer::token::lexeme::keyword::Keyword;
 
 ///
 /// The boolean literal lexeme.
@@ -55,8 +53,8 @@ impl From<bool> for Boolean {
     }
 }
 
-impl fmt::Display for Boolean {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Boolean {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::False => write!(f, "false"),
             Self::True => write!(f, "true"),

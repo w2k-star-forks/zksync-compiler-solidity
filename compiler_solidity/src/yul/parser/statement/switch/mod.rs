@@ -4,9 +4,13 @@
 
 pub mod case;
 
-use crate::yul::lexer::lexeme::keyword::Keyword;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::keyword::Keyword;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::Expression;
 
@@ -17,6 +21,8 @@ use self::case::Case;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Switch {
+    /// The location.
+    pub location: Location,
     /// The expression being matched.
     pub expression: Expression,
     /// The non-default cases.
@@ -41,20 +47,36 @@ impl Switch {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let mut token = crate::yul::parser::take_or_next(initial, lexer)?;
+        let location = token.location;
         let mut state = State::CaseOrDefaultKeyword;
 
-        let expression = Expression::parse(lexer, Some(lexeme.clone()))?;
+        let expression = Expression::parse(lexer, Some(token.clone()))?;
         let mut cases = Vec::new();
         let mut default = None;
 
         loop {
             match state {
                 State::CaseOrDefaultKeyword => match lexer.peek()? {
-                    Lexeme::Keyword(Keyword::Case) => state = State::CaseBlock,
-                    Lexeme::Keyword(Keyword::Default) => state = State::DefaultBlock,
-                    _ => break,
+                    _token @ Token {
+                        lexeme: Lexeme::Keyword(Keyword::Case),
+                        ..
+                    } => {
+                        token = _token;
+                        state = State::CaseBlock;
+                    }
+                    _token @ Token {
+                        lexeme: Lexeme::Keyword(Keyword::Default),
+                        ..
+                    } => {
+                        token = _token;
+                        state = State::DefaultBlock;
+                    }
+                    _token => {
+                        token = _token;
+                        break;
+                    }
                 },
                 State::CaseBlock => {
                     lexer.next()?;
@@ -70,14 +92,16 @@ impl Switch {
         }
 
         if cases.is_empty() && default.is_none() {
-            anyhow::bail!(
-                "Expected one of {:?}, found `{}`",
-                ["case", "default"],
-                lexeme
-            );
+            return Err(ParserError::InvalidToken {
+                location: token.location,
+                expected: vec!["case", "default"],
+                found: token.lexeme.to_string(),
+            }
+            .into());
         }
 
         Ok(Self {
+            location,
             expression,
             cases,
             default,
@@ -139,5 +163,48 @@ where
         context.set_basic_block(join_block);
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yul::lexer::token::location::Location;
+    use crate::yul::lexer::Lexer;
+    use crate::yul::parser::error::Error;
+    use crate::yul::parser::statement::object::Object;
+
+    #[test]
+    fn error_invalid_token_case() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                switch 42
+                    branch x {}
+                    default {}
+                }
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(12, 21),
+                expected: vec!["case", "default"],
+                found: "branch".to_owned(),
+            }
+            .into())
+        );
     }
 }

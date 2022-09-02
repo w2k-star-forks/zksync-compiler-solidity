@@ -2,7 +2,9 @@
 //! The for-loop statement.
 //!
 
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
 use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::Expression;
@@ -12,6 +14,8 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForLoop {
+    /// The location.
+    pub location: Location,
     /// The index variables initialization block.
     pub initializer: Block,
     /// The continue condition block.
@@ -26,10 +30,11 @@ impl ForLoop {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
+        let location = token.location;
 
-        let initializer = Block::parse(lexer, Some(lexeme))?;
+        let initializer = Block::parse(lexer, Some(token))?;
 
         let condition = Expression::parse(lexer, None)?;
 
@@ -38,6 +43,7 @@ impl ForLoop {
         let body = Block::parse(lexer, None)?;
 
         Ok(Self {
+            location,
             initializer,
             condition,
             finalizer,
