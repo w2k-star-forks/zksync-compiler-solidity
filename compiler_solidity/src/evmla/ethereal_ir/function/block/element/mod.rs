@@ -664,12 +664,12 @@ where
                     .instruction
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
-                let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
-                })?;
-                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
 
-                let index = context.field_const(key_normalized);
+                let offset = context.get_immutable(key.as_str()).ok_or_else(|| {
+                    anyhow::anyhow!("Found an undeclared immutable index `{}`", key,)
+                })?;
+
+                let index = context.field_const(offset as u64);
                 compiler_llvm_context::immutable::load(context, index)
             }
             InstructionName::ASSIGNIMMUTABLE => {
@@ -679,14 +679,10 @@ where
                     .instruction
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
-                let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!("Found a non-numeric immutable index {}: {}", key, error)
-                })?;
-                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
-                context
-                    .update_immutable_size((key_normalized as usize) + compiler_common::SIZE_FIELD);
 
-                let index = context.field_const(key_normalized);
+                let offset = context.allocate_immutable(key.as_str());
+
+                let index = context.field_const(offset as u64);
                 let value = arguments.pop().expect("Always exists").into_int_value();
                 compiler_llvm_context::immutable::store(context, index, value)
             }

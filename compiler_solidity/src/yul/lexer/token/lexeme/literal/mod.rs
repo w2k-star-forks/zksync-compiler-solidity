@@ -6,8 +6,6 @@ pub mod boolean;
 pub mod integer;
 pub mod string;
 
-use std::fmt;
-
 use self::boolean::Boolean;
 use self::integer::Integer;
 use self::string::String;
@@ -25,8 +23,8 @@ pub enum Literal {
     String(String),
 }
 
-impl fmt::Display for Literal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Boolean(inner) => write!(f, "{}", inner),
             Self::Integer(inner) => write!(f, "{}", inner),

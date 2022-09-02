@@ -5,9 +5,13 @@
 use inkwell::types::BasicType;
 use inkwell::values::BasicValue;
 
-use crate::yul::lexer::lexeme::symbol::Symbol;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::symbol::Symbol;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::identifier::Identifier;
 use crate::yul::parser::statement::expression::function_call::name::Name as FunctionName;
 use crate::yul::parser::statement::expression::Expression;
@@ -17,6 +21,8 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct VariableDeclaration {
+    /// The location.
+    pub location: Location,
     /// The variable bindings list.
     pub bindings: Vec<Identifier>,
     /// The variable initializing expression.
@@ -29,30 +35,38 @@ impl VariableDeclaration {
     ///
     pub fn parse(
         lexer: &mut Lexer,
-        initial: Option<Lexeme>,
-    ) -> anyhow::Result<(Self, Option<Lexeme>)> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+        initial: Option<Token>,
+    ) -> Result<(Self, Option<Token>), Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
+        let location = token.location;
 
-        let (bindings, next) = Identifier::parse_typed_list(lexer, Some(lexeme))?;
+        let (bindings, next) = Identifier::parse_typed_list(lexer, Some(token))?;
         for binding in bindings.iter() {
-            match FunctionName::from(binding.name.as_str()) {
+            match FunctionName::from(binding.inner.as_str()) {
                 FunctionName::UserDefined(_) => continue,
-                _function_name => anyhow::bail!(
-                    "Reserved function name `{}` cannot be a variable identifier",
-                    binding.name
-                ),
+                _function_name => {
+                    return Err(ParserError::ReservedIdentifier {
+                        location: binding.location,
+                        identifier: binding.inner.to_owned(),
+                    }
+                    .into())
+                }
             }
         }
 
         match crate::yul::parser::take_or_next(next, lexer)? {
-            Lexeme::Symbol(Symbol::Assignment) => {}
-            lexeme => {
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::Assignment),
+                ..
+            } => {}
+            token => {
                 return Ok((
                     Self {
+                        location,
                         bindings,
                         expression: None,
                     },
-                    Some(lexeme),
+                    Some(token),
                 ))
             }
         }
@@ -61,6 +75,7 @@ impl VariableDeclaration {
 
         Ok((
             Self {
+                location,
                 bindings,
                 expression: Some(expression),
             },
@@ -76,12 +91,12 @@ where
     fn into_llvm(mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         if self.bindings.len() == 1 {
             let identifier = self.bindings.remove(0);
-            let r#type = identifier.yul_type.unwrap_or_default().into_llvm(context);
-            let pointer = context.build_alloca(r#type, identifier.name.as_str());
+            let r#type = identifier.r#type.unwrap_or_default().into_llvm(context);
+            let pointer = context.build_alloca(r#type, identifier.inner.as_str());
             context
                 .function_mut()
                 .stack
-                .insert(identifier.name, pointer);
+                .insert(identifier.inner, pointer);
             let value = if let Some(expression) = self.expression {
                 match expression.into_llvm(context)? {
                     Some(value) => value.to_llvm(),
@@ -99,7 +114,7 @@ where
                 .iter()
                 .map(|binding| {
                     binding
-                        .yul_type
+                        .r#type
                         .to_owned()
                         .unwrap_or_default()
                         .into_llvm(context)
@@ -110,7 +125,7 @@ where
         let pointer = context.build_alloca(llvm_type, "bindings_pointer");
         for (index, binding) in self.bindings.iter().enumerate() {
             let yul_type = binding
-                .yul_type
+                .r#type
                 .to_owned()
                 .unwrap_or_default()
                 .into_llvm(context);
@@ -121,11 +136,13 @@ where
             context
                 .function_mut()
                 .stack
-                .insert(binding.name.to_owned(), pointer);
+                .insert(binding.inner.to_owned(), pointer);
         }
 
         match self.expression.take() {
             Some(expression) => {
+                let location = expression.location();
+
                 if let Some(value) = expression.into_llvm(context)? {
                     if value
                         .value
@@ -134,7 +151,8 @@ where
                         != pointer.get_type()
                     {
                         anyhow::bail!(
-                            "Assignment to {:?} received an invalid number of arguments",
+                            "{} Assignment to {:?} received an invalid number of arguments",
+                            location,
                             self.bindings
                         );
                     }
@@ -160,12 +178,13 @@ where
                         let pointer = context
                             .function_mut()
                             .stack
-                            .get(binding.name.as_str())
+                            .get(binding.inner.as_str())
                             .copied()
                             .ok_or_else(|| {
                                 anyhow::anyhow!(
-                                    "Assignment to an undeclared variable `{}`",
-                                    binding.name
+                                    "{} Assignment to an undeclared variable `{}`",
+                                    binding.location,
+                                    binding.inner
                                 )
                             })?;
                         context.build_store(pointer, value);
@@ -178,5 +197,45 @@ where
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yul::lexer::token::location::Location;
+    use crate::yul::lexer::Lexer;
+    use crate::yul::parser::error::Error;
+    use crate::yul::parser::statement::object::Object;
+
+    #[test]
+    fn error_reserved_identifier() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                let basefee := 42
+                return(0, 0)
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::ReservedIdentifier {
+                location: Location::new(11, 21),
+                identifier: "basefee".to_owned()
+            }
+            .into())
+        );
     }
 }

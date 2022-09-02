@@ -2,7 +2,9 @@
 //! The if-conditional statement.
 //!
 
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
 use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::Expression;
@@ -12,6 +14,8 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct IfConditional {
+    /// The location.
+    pub location: Location,
     /// The condition expression.
     pub condition: Expression,
     /// The conditional block.
@@ -22,14 +26,19 @@ impl IfConditional {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
+        let location = token.location;
 
-        let condition = Expression::parse(lexer, Some(lexeme))?;
+        let condition = Expression::parse(lexer, Some(token))?;
 
         let block = Block::parse(lexer, None)?;
 
-        Ok(Self { condition, block })
+        Ok(Self {
+            location,
+            condition,
+            block,
+        })
     }
 }
 

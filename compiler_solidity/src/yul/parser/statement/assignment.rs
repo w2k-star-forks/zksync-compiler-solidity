@@ -2,9 +2,13 @@
 //! The assignment expression statement.
 //!
 
-use crate::yul::lexer::lexeme::symbol::Symbol;
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::symbol::Symbol;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::identifier::Identifier;
 use crate::yul::parser::statement::expression::Expression;
 
@@ -13,8 +17,10 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Assignment {
+    /// The location.
+    pub location: Location,
     /// The variable bindings.
-    pub bindings: Vec<String>,
+    pub bindings: Vec<Identifier>,
     /// The initializing expression.
     pub initializer: Expression,
 }
@@ -23,42 +29,75 @@ impl Assignment {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
-        let identifier = match lexeme {
-            Lexeme::Identifier(identifier) => identifier,
-            lexeme => {
-                anyhow::bail!("Expected one of {:?}, found `{}`", ["{identifier}"], lexeme);
+        let (location, identifier) = match token {
+            Token {
+                location,
+                lexeme: Lexeme::Identifier(identifier),
+                ..
+            } => (location, identifier),
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["{identifier}"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
             }
         };
+        let length = identifier.inner.len();
 
         match lexer.peek()? {
-            Lexeme::Symbol(Symbol::Assignment) => {
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::Assignment),
+                ..
+            } => {
                 lexer.next()?;
 
                 Ok(Self {
-                    bindings: vec![identifier],
+                    location,
+                    bindings: vec![Identifier::new(location, identifier.inner)],
                     initializer: Expression::parse(lexer, None)?,
                 })
             }
-            Lexeme::Symbol(Symbol::Comma) => {
-                let (identifiers, next) =
-                    Identifier::parse_list(lexer, Some(Lexeme::Identifier(identifier)))?;
+            Token {
+                lexeme: Lexeme::Symbol(Symbol::Comma),
+                ..
+            } => {
+                let (identifiers, next) = Identifier::parse_list(
+                    lexer,
+                    Some(Token::new(location, Lexeme::Identifier(identifier), length)),
+                )?;
 
                 match crate::yul::parser::take_or_next(next, lexer)? {
-                    Lexeme::Symbol(Symbol::Assignment) => {}
-                    lexeme => {
-                        anyhow::bail!("Expected one of {:?}, found `{}`", [":="], lexeme);
+                    Token {
+                        lexeme: Lexeme::Symbol(Symbol::Assignment),
+                        ..
+                    } => {}
+                    token => {
+                        return Err(ParserError::InvalidToken {
+                            location: token.location,
+                            expected: vec![":="],
+                            found: token.lexeme.to_string(),
+                        }
+                        .into());
                     }
                 }
 
                 Ok(Self {
+                    location,
                     bindings: identifiers,
                     initializer: Expression::parse(lexer, None)?,
                 })
             }
-            lexeme => anyhow::bail!("Expected one of {:?}, found `{}`", [":=", ","], lexeme),
+            token => Err(ParserError::InvalidToken {
+                location: token.location,
+                expected: vec![":=", ","],
+                found: token.lexeme.to_string(),
+            }
+            .into()),
         }
     }
 }
@@ -74,8 +113,11 @@ where
         };
 
         if self.bindings.len() == 1 {
-            let name = self.bindings.remove(0);
-            context.build_store(context.function().stack[name.as_str()], value.to_llvm());
+            let identifier = self.bindings.remove(0).inner;
+            context.build_store(
+                context.function().stack[identifier.as_str()],
+                value.to_llvm(),
+            );
             return Ok(());
         }
 
@@ -102,7 +144,7 @@ where
                 format!("assignment_binding_{}_value", index).as_str(),
             );
 
-            context.build_store(context.function().stack[binding.as_str()], value);
+            context.build_store(context.function().stack[binding.inner.as_str()], value);
         }
 
         Ok(())

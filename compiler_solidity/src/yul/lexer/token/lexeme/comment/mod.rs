@@ -5,6 +5,8 @@
 pub mod multi_line;
 pub mod single_line;
 
+use crate::yul::lexer::token::Token;
+
 use self::multi_line::Comment as MultiLineComment;
 use self::single_line::Comment as SingleLineComment;
 
@@ -24,19 +26,13 @@ impl Comment {
     ///
     /// Returns the comment's length, including the trimmed whitespace around it.
     ///
-    pub fn parse(input: &str) -> Option<usize> {
-        let mut length = 0;
-        let trimmed_start = input.trim_start();
-        length += input.len() - trimmed_start.len();
-
-        if trimmed_start.starts_with(SingleLineComment::START) {
-            return Some(length + SingleLineComment::parse(trimmed_start));
+    pub fn parse(input: &str) -> Option<Token> {
+        if input.starts_with(SingleLineComment::START) {
+            Some(SingleLineComment::parse(input))
+        } else if input.starts_with(MultiLineComment::START) {
+            Some(MultiLineComment::parse(input))
+        } else {
+            None
         }
-
-        if trimmed_start.starts_with(MultiLineComment::START) {
-            return Some(length + MultiLineComment::parse(trimmed_start));
-        }
-
-        None
     }
 }

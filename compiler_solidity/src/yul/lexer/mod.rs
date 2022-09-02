@@ -2,16 +2,21 @@
 //! The compiler lexer.
 //!
 
-pub mod lexeme;
+pub mod error;
+pub mod token;
 
-use self::lexeme::comment::Comment;
-use self::lexeme::keyword::Keyword;
-use self::lexeme::literal::boolean::Boolean as BooleanLiteral;
-use self::lexeme::literal::integer::Integer as IntegerLiteral;
-use self::lexeme::literal::string::String as StringLiteral;
-use self::lexeme::literal::Literal;
-use self::lexeme::symbol::Symbol;
-use self::lexeme::Lexeme;
+#[cfg(test)]
+mod tests;
+
+use self::error::Error;
+use self::token::lexeme::comment::Comment;
+use self::token::lexeme::identifier::Identifier;
+use self::token::lexeme::literal::integer::Integer as IntegerLiteral;
+use self::token::lexeme::literal::string::String as StringLiteral;
+use self::token::lexeme::symbol::Symbol;
+use self::token::lexeme::Lexeme;
+use self::token::location::Location;
+use self::token::Token;
 
 ///
 /// The compiler lexer.
@@ -19,12 +24,12 @@ use self::lexeme::Lexeme;
 pub struct Lexer {
     /// The input source code.
     input: String,
-    /// The tokenization regular expression.
-    regexp: regex::Regex,
-    /// The position in the source code.
-    index: usize,
+    /// The number of characters processed so far.
+    offset: usize,
+    /// The current location.
+    location: Location,
     /// The peeked lexeme, waiting to be fetched.
-    peeked: Option<Lexeme>,
+    peeked: Option<Token>,
 }
 
 impl Lexer {
@@ -36,8 +41,8 @@ impl Lexer {
 
         Self {
             input,
-            regexp: Symbol::regexp(),
-            index: 0,
+            offset: 0,
+            location: Location::default(),
             peeked: None,
         }
     }
@@ -46,70 +51,78 @@ impl Lexer {
     /// Advances the lexer, returning the next lexeme.
     ///
     #[allow(clippy::should_implement_trait)]
-    pub fn next(&mut self) -> anyhow::Result<Lexeme> {
+    pub fn next(&mut self) -> Result<Token, Error> {
         if let Some(peeked) = self.peeked.take() {
             return Ok(peeked);
         }
 
-        loop {
-            if let Some(length) = Comment::parse(&self.input[self.index..]) {
-                self.index += length;
+        while let Some(character) = self.input.chars().nth(self.offset) {
+            if character.is_ascii_whitespace() {
+                if character == '\n' {
+                    self.location.line += 1;
+                    self.location.column = 1;
+                } else if character != '\r' {
+                    self.location.column += 1;
+                }
+                self.offset += 1;
                 continue;
             }
 
-            if let Some((length, literal)) = StringLiteral::parse(&self.input[self.index..]) {
-                self.index += length;
-                let lexeme = Lexeme::Literal(Literal::String(literal));
-                return Ok(lexeme);
+            if let Some(token) = Comment::parse(&self.input[self.offset..]) {
+                self.offset += token.length;
+                self.location
+                    .shift_down(token.location.line, token.location.column);
+                continue;
             }
 
-            let r#match = match self.regexp.find(&self.input[self.index..]) {
-                Some(r#match) => r#match,
-                None => return Ok(Lexeme::EndOfFile),
-            };
+            if let Some(mut token) = StringLiteral::parse(&self.input[self.offset..]) {
+                token.location = self.location;
 
-            let lexeme = if r#match.start() != 0 {
-                let lexeme = match Keyword::try_from(
-                    &self.input[self.index..self.index + r#match.start()],
-                ) {
-                    Ok(keyword) => match BooleanLiteral::try_from(keyword) {
-                        Ok(literal) => Lexeme::Literal(Literal::Boolean(literal)),
-                        Err(keyword) => Lexeme::Keyword(keyword),
-                    },
-                    Err(string) => {
-                        if let Some(literal) = IntegerLiteral::parse(string.as_str()) {
-                            Lexeme::Literal(Literal::Integer(literal))
-                        } else if Lexeme::is_identifier(string.as_str()) {
-                            Lexeme::Identifier(string)
-                        } else {
-                            anyhow::bail!("Invalid lexeme `{}`", string);
-                        }
-                    }
-                };
-                self.index += r#match.start();
-                lexeme
-            } else if !r#match.as_str().trim().is_empty() {
-                let lexeme = match Symbol::try_from(r#match.as_str()) {
-                    Ok(symbol) => Lexeme::Symbol(symbol),
-                    Err(string) => {
-                        anyhow::bail!("Invalid lexeme `{}`", string);
-                    }
-                };
-                self.index += r#match.as_str().len();
-                lexeme
-            } else {
-                self.index += r#match.as_str().len();
-                continue;
-            };
+                self.offset += token.length;
+                self.location.shift_right(token.length);
+                return Ok(token);
+            }
 
-            return Ok(lexeme);
+            if let Some(mut token) = Identifier::parse(&self.input[self.offset..]) {
+                token.location = self.location;
+
+                self.offset += token.length;
+                self.location.shift_right(token.length);
+                return Ok(token);
+            }
+
+            if let Some(mut token) = IntegerLiteral::parse(&self.input[self.offset..]) {
+                token.location = self.location;
+
+                self.offset += token.length;
+                self.location.shift_right(token.length);
+                return Ok(token);
+            }
+
+            if let Some(mut token) = Symbol::parse(&self.input[self.offset..]) {
+                token.location = self.location;
+
+                self.offset += token.length;
+                self.location.shift_right(token.length);
+                return Ok(token);
+            }
+
+            let end = self.input[self.offset..]
+                .find(char::is_whitespace)
+                .unwrap_or(self.input.len());
+            return Err(Error::InvalidLexeme {
+                location: self.location,
+                sequence: self.input[self.offset..self.offset + end].to_owned(),
+            });
         }
+
+        Ok(Token::new(self.location, Lexeme::EndOfFile, 0))
     }
 
     ///
     /// Peeks the next lexeme without advancing the iterator.
     ///
-    pub fn peek(&mut self) -> anyhow::Result<Lexeme> {
+    pub fn peek(&mut self) -> Result<Token, Error> {
         match self.peeked {
             Some(ref peeked) => Ok(peeked.clone()),
             None => {

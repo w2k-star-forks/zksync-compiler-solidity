@@ -3,12 +3,12 @@
 //!
 
 pub mod comment;
+pub mod identifier;
 pub mod keyword;
 pub mod literal;
 pub mod symbol;
 
-use std::fmt;
-
+use self::identifier::Identifier;
 use self::keyword::Keyword;
 use self::literal::Literal;
 use self::symbol::Symbol;
@@ -23,31 +23,23 @@ pub enum Lexeme {
     /// The symbol lexeme.
     Symbol(Symbol),
     /// The identifier lexeme.
-    Identifier(String),
+    Identifier(Identifier),
     /// The literal lexeme.
     Literal(Literal),
+    /// The comment lexeme.
+    Comment,
     /// The end-of-file lexeme.
     EndOfFile,
 }
 
-impl Lexeme {
-    ///
-    /// Checks whether the lexeme is a valid identifier.
-    ///
-    pub fn is_identifier(string: &str) -> bool {
-        regex::Regex::new(r"^[a-zA-Z_\$][a-zA-Z0-9_\$\.]*$")
-            .expect("Always valid")
-            .is_match(string)
-    }
-}
-
-impl fmt::Display for Lexeme {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Lexeme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Keyword(inner) => write!(f, "{}", inner),
             Self::Symbol(inner) => write!(f, "{}", inner),
             Self::Identifier(inner) => write!(f, "{}", inner),
             Self::Literal(inner) => write!(f, "{}", inner),
+            Self::Comment => Ok(()),
             Self::EndOfFile => write!(f, "EOF"),
         }
     }

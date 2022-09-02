@@ -2,7 +2,10 @@
 //! The string literal lexeme.
 //!
 
-use std::fmt;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::lexeme::Literal;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 
 ///
 /// The string literal lexeme.
@@ -29,7 +32,7 @@ impl String {
     ///
     /// Parses the value from the source code slice.
     ///
-    pub fn parse(input: &str) -> Option<(usize, Self)> {
+    pub fn parse(input: &str) -> Option<Token> {
         let mut length = 0;
 
         let is_string = input[length..].starts_with('"');
@@ -61,12 +64,16 @@ impl String {
 
         let literal = Self::new(string, is_hex_string);
 
-        Some((length, literal))
+        Some(Token::new(
+            Location::new(0, length),
+            Lexeme::Literal(Literal::String(literal)),
+            length,
+        ))
     }
 }
 
-impl fmt::Display for String {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for String {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
     }
 }

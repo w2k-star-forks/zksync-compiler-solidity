@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [1.1.6] - 2022-09-02
+
+### Added
+
+- Better compiler errors for the Yul mode
+
+### Changed
+
+- Unsupported instructions `PC`, `EXTCODECOPY`, `SELFDESTRUCT` now produce compiler errors
+
+### Fixed
+
+- Bloating the array of immutables with zero values
+
 ## [1.1.5] - 2022-08-16
 
 ### Added

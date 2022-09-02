@@ -2,8 +2,12 @@
 //! The switch statement case.
 //!
 
-use crate::yul::lexer::lexeme::Lexeme;
+use crate::yul::error::Error;
+use crate::yul::lexer::token::lexeme::Lexeme;
+use crate::yul::lexer::token::location::Location;
+use crate::yul::lexer::token::Token;
 use crate::yul::lexer::Lexer;
+use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::literal::Literal;
 
@@ -12,6 +16,8 @@ use crate::yul::parser::statement::expression::literal::Literal;
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Case {
+    /// The location.
+    pub location: Location,
     /// The matched constant.
     pub literal: Literal,
     /// The case block.
@@ -22,18 +28,74 @@ impl Case {
     ///
     /// The element parser.
     ///
-    pub fn parse(lexer: &mut Lexer, initial: Option<Lexeme>) -> anyhow::Result<Self> {
-        let lexeme = crate::yul::parser::take_or_next(initial, lexer)?;
+    pub fn parse(lexer: &mut Lexer, initial: Option<Token>) -> Result<Self, Error> {
+        let token = crate::yul::parser::take_or_next(initial, lexer)?;
 
-        let literal = match lexeme {
-            lexeme @ Lexeme::Literal(_) => Literal::parse(lexer, Some(lexeme))?,
-            lexeme => {
-                anyhow::bail!("Expected one of {:?}, found `{}`", ["{literal}"], lexeme);
+        let (location, literal) = match token {
+            token @ Token {
+                lexeme: Lexeme::Literal(_),
+                location,
+                ..
+            } => (location, Literal::parse(lexer, Some(token))?),
+            token => {
+                return Err(ParserError::InvalidToken {
+                    location: token.location,
+                    expected: vec!["{literal}"],
+                    found: token.lexeme.to_string(),
+                }
+                .into());
             }
         };
 
         let block = Block::parse(lexer, None)?;
 
-        Ok(Self { literal, block })
+        Ok(Self {
+            location,
+            literal,
+            block,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::yul::lexer::token::location::Location;
+    use crate::yul::lexer::Lexer;
+    use crate::yul::parser::error::Error;
+    use crate::yul::parser::statement::object::Object;
+
+    #[test]
+    fn error_invalid_token_literal() {
+        let input = r#"
+object "Test" {
+    code {
+        {
+            return(0, 0)
+        }
+    }
+    object "Test_deployed" {
+        code {
+            {
+                switch 42
+                    case x {}
+                    default {}
+                }
+            }
+        }
+    }
+}
+    "#;
+
+        let mut lexer = Lexer::new(input.to_owned());
+        let result = Object::parse(&mut lexer, None);
+        assert_eq!(
+            result,
+            Err(Error::InvalidToken {
+                location: Location::new(12, 26),
+                expected: vec!["{literal}"],
+                found: "x".to_owned(),
+            }
+            .into())
+        );
     }
 }
