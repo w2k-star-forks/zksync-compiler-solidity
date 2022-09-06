@@ -504,16 +504,10 @@ impl FunctionCall {
                     ));
                 }
 
-                let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!(
-                        "{} Found a non-numeric immutable index {}: {}",
-                        location,
-                        key,
-                        error
-                    )
-                })?;
-                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
-                let index = context.field_const(key_normalized);
+                let offset = context.get_immutable(key.as_str());
+
+                let index = context.field_const(offset as u64);
+
                 compiler_llvm_context::immutable::load(context, index)
             }
             Name::SetImmutable => {
@@ -526,19 +520,9 @@ impl FunctionCall {
                     return Ok(None);
                 }
 
-                let key_numeric: u64 = key.parse().map_err(|error| {
-                    anyhow::anyhow!(
-                        "{} Found a non-numeric immutable index {}: {}",
-                        location,
-                        key,
-                        error
-                    )
-                })?;
-                let key_normalized = key_numeric * (compiler_common::SIZE_FIELD as u64);
-                context
-                    .update_immutable_size((key_normalized as usize) + compiler_common::SIZE_FIELD);
+                let offset = context.allocate_immutable(key.as_str());
 
-                let index = context.field_const(key_normalized);
+                let index = context.field_const(offset as u64);
                 let value = arguments[2].value.into_int_value();
                 compiler_llvm_context::immutable::store(context, index, value)
             }
@@ -742,7 +726,13 @@ impl FunctionCall {
                 let input_offset = arguments[1].into_int_value();
                 let input_size = arguments[2].into_int_value();
 
-                compiler_llvm_context::create::create(context, value, input_offset, input_size)
+                compiler_llvm_context::create::create(
+                    context,
+                    value,
+                    input_offset,
+                    input_size,
+                    compiler_llvm_context::AddressSpace::Heap,
+                )
             }
             Name::Create2 => {
                 let arguments = self.pop_arguments_llvm::<D, 4>(context)?;
@@ -758,6 +748,7 @@ impl FunctionCall {
                     input_offset,
                     input_size,
                     Some(salt),
+                    compiler_llvm_context::AddressSpace::Heap,
                 )
             }
             Name::DataOffset => {

@@ -49,7 +49,11 @@ impl Build {
     ///
     /// Writes all contracts assembly and bytecode to the combined JSON.
     ///
-    pub fn write_to_combined_json(self, combined_json: &mut CombinedJson) -> anyhow::Result<()> {
+    pub fn write_to_combined_json(
+        self,
+        combined_json: &mut CombinedJson,
+        zk_version: &semver::Version,
+    ) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             let combined_json_contract = combined_json
                 .contracts
@@ -66,6 +70,8 @@ impl Build {
             contract.write_to_combined_json(combined_json_contract)?;
         }
 
+        combined_json.zk_version = Some(zk_version.to_string());
+
         Ok(())
     }
 
@@ -75,6 +81,8 @@ impl Build {
     pub fn write_to_standard_json(
         mut self,
         standard_json: &mut StandardJsonOutput,
+        version: &semver::Version,
+        zk_version: &semver::Version,
     ) -> anyhow::Result<()> {
         let contracts = match standard_json.contracts.as_mut() {
             Some(contracts) => contracts,
@@ -90,6 +98,9 @@ impl Build {
                 }
             }
         }
+
+        standard_json.version = Some(version.to_string());
+        standard_json.zk_version = Some(zk_version.to_string());
 
         Ok(())
     }

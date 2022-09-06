@@ -55,6 +55,8 @@ fn main_inner() -> anyhow::Result<()> {
         );
     }
 
+    let zksolc_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
+
     let pipeline = if solc_version < compiler_solidity::SolcCompiler::FIRST_YUL_VERSION
         || arguments.force_evmla
     {
@@ -151,8 +153,12 @@ fn main_inner() -> anyhow::Result<()> {
             }
         }
 
-        let project =
-            solc_output.try_to_project(libraries, pipeline, solc_version, dump_flags.as_slice())?;
+        let project = solc_output.try_to_project(
+            libraries,
+            pipeline,
+            &solc_version,
+            dump_flags.as_slice(),
+        )?;
         let optimizer_settings = if optimize {
             compiler_llvm_context::OptimizerSettings::cycles()
         } else {
@@ -160,7 +166,7 @@ fn main_inner() -> anyhow::Result<()> {
         };
         let build = project.compile_all(optimizer_settings, dump_flags)?;
         if arguments.standard_json {
-            build.write_to_standard_json(&mut solc_output)?;
+            build.write_to_standard_json(&mut solc_output, &solc_version, &zksolc_version)?;
             serde_json::to_writer(std::io::stdout(), &solc_output)?;
             return Ok(());
         }
@@ -177,7 +183,7 @@ fn main_inner() -> anyhow::Result<()> {
         std::fs::create_dir_all(&output_directory)?;
 
         if let Some(mut combined_json) = combined_json {
-            build.write_to_combined_json(&mut combined_json)?;
+            build.write_to_combined_json(&mut combined_json, &zksolc_version)?;
             combined_json.write_to_directory(&output_directory, arguments.overwrite)?;
         } else {
             build.write_to_directory(
@@ -194,7 +200,7 @@ fn main_inner() -> anyhow::Result<()> {
             output_directory
         );
     } else if let Some(mut combined_json) = combined_json {
-        build.write_to_combined_json(&mut combined_json)?;
+        build.write_to_combined_json(&mut combined_json, &zksolc_version)?;
         println!(
             "{}",
             serde_json::to_string(&combined_json).expect("Always valid")

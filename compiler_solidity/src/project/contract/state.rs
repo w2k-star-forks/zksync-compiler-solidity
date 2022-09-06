@@ -13,6 +13,7 @@ use crate::project::contract::Contract;
 /// The project contract state.
 ///
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum State {
     /// The contract is waiting for be built.
     Source(Contract),

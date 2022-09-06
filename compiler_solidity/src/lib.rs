@@ -3,6 +3,7 @@
 //!
 
 pub(crate) mod build;
+pub(crate) mod r#const;
 pub(crate) mod dump_flag;
 pub(crate) mod evmla;
 pub(crate) mod project;

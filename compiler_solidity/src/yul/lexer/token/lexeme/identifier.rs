@@ -2,6 +2,7 @@
 //! The identifier lexeme.
 //!
 
+use crate::yul::lexer::token::lexeme::keyword::Keyword;
 use crate::yul::lexer::token::lexeme::Lexeme;
 use crate::yul::lexer::token::location::Location;
 use crate::yul::lexer::token::Token;
@@ -34,6 +35,10 @@ impl Identifier {
 
         let inner = input[..end].to_string();
         let length = inner.len();
+
+        if let Some(token) = Keyword::parse(inner.as_str()) {
+            return Some(token);
+        }
 
         Some(Token::new(
             Location::new(0, length),

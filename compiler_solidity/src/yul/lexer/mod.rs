@@ -11,7 +11,6 @@ mod tests;
 use self::error::Error;
 use self::token::lexeme::comment::Comment;
 use self::token::lexeme::identifier::Identifier;
-use self::token::lexeme::keyword::Keyword;
 use self::token::lexeme::literal::integer::Integer as IntegerLiteral;
 use self::token::lexeme::literal::string::String as StringLiteral;
 use self::token::lexeme::symbol::Symbol;
@@ -77,14 +76,6 @@ impl Lexer {
             }
 
             if let Some(mut token) = StringLiteral::parse(&self.input[self.offset..]) {
-                token.location = self.location;
-
-                self.offset += token.length;
-                self.location.shift_right(token.length);
-                return Ok(token);
-            }
-
-            if let Some(mut token) = Keyword::parse(&self.input[self.offset..]) {
                 token.location = self.location;
 
                 self.offset += token.length;

@@ -4,18 +4,18 @@ version = 3
 
 [[package]]
 name = "aho-corasick"
-version = "0.7.18"
+version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e37cfd5e7657ada45f742d6e99ca5788580b5c529dc78faf11ece6dc702656f"
+checksum = "b4f55bd91a0978cbfd91c457a164bab8b4001c833b7f323132c0a4e1922dd44e"
 dependencies = [
  "memchr",
 ]
 
 [[package]]
 name = "anyhow"
-version = "1.0.63"
+version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a26fa4d7e3f2eebadf743988fc8aec9fa9a9e82611acafd77c1462ed6262440a"
+checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
 name = "arrayvec"
@@ -60,9 +60,9 @@ dependencies = [
 
 [[package]]
 name = "block-buffer"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bf7fe51849ea569fd452f37822f606a5cabb684dc918707a0193fd4664ff324"
+checksum = "69cce20737498f97b993470a6e536b8523f0af7892a4f928cceb1ac5e52ebe7e"
 dependencies = [
  "generic-array",
 ]
@@ -122,12 +122,12 @@ dependencies = [
 [[package]]
 name = "compiler-common"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-common?branch=vm1.1#ecac1b5d68b1a6230b0b780e71364c076ae7ee80"
+source = "git+https://github.com/matter-labs/compiler-common?branch=vm1.2#e7a9a8e4d0de8f341659c2c0def2981e79adf6fe"
 
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.1#ff73317251f433719875da77f438c133302fb548"
+source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.2#e5f7335252d2a05aa7b59382364d1e06e79bf6b7"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -141,11 +141,12 @@ dependencies = [
  "sha2",
  "sha3",
  "zkevm-assembly",
+ "zkevm_opcode_defs",
 ]
 
 [[package]]
 name = "compiler-solidity"
-version = "1.1.5"
+version = "1.2.0"
 dependencies = [
  "anyhow",
  "colored",
@@ -170,9 +171,9 @@ dependencies = [
 
 [[package]]
 name = "cpufeatures"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc948ebb96241bb40ab73effeb80d9f93afaad49359d159a5e61be51619fe813"
+checksum = "28d997bd5e24a5928dd43e46dc529867e207907fe0b239c3477d924f7f2ca320"
 dependencies = [
  "libc",
 ]
@@ -646,9 +647,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.13.1"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "074864da206b4973b84eb91683020dbefd6a8c3f0f38e054d93954e891935e4e"
+checksum = "2f7254b99e31cad77da24b08ebf628882739a608578bb1bcdfc1f9c21260d7c0"
 
 [[package]]
 name = "parity-scale-codec"
@@ -909,6 +910,9 @@ name = "semver"
 version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93f6841e709003d68bb2deee8c343572bf446003ec20a583e76f7b15cebf3711"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "semver-parser"
@@ -952,9 +956,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "899bf02746a2c92bf1053d9327dadb252b01af1f81f90cdb902411f518bc7215"
+checksum = "cf9db03534dff993187064c4e0c05a5708d2a9728ace9a8959b77bedf415dac5"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -963,9 +967,9 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.10.2"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a31480366ec990f395a61b7c08122d99bd40544fdb5abcfc1b06bb29994312c"
+checksum = "eaedf34ed289ea47c2b741bb72e5357a209512d67bcd4bda44359e5bf0470f56"
 dependencies = [
  "digest",
  "keccak",
@@ -1050,18 +1054,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.33"
+version = "1.0.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d0a539a918745651435ac7db7a18761589a94cd7e94cd56999f828bf73c8a57"
+checksum = "8c1b05ca9d106ba7d2e31a9dab4a64e7be2cce415321966ea3132c49a656e252"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.33"
+version = "1.0.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c251e90f708e16c49a16f4917dc2131e75222b72edfa9cb7f7c58ae56aae0c09"
+checksum = "e8f2591983642de85c921015f3f070c665a197ed69e417af436115e3a1407487"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1094,9 +1098,9 @@ checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "ucd-trie"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89570599c4fe5585de2b388aab47e99f7fa4e9238a1399f707a02e356058141c"
+checksum = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81"
 
 [[package]]
 name = "uint"
@@ -1222,8 +1226,8 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 
 [[package]]
 name = "zkevm-assembly"
-version = "0.1.0"
-source = "git+https://github.com/matter-labs/zkEVM-assembly?branch=v1.1.1#1294f8a6f7252c6568f20c51a11b96ad8f4386f7"
+version = "1.1.2"
+source = "git+https://github.com/matter-labs/zkEVM-assembly?branch=v1.1.2#f9918afbea92e328157cd55baac9f95ee82076af"
 dependencies = [
  "env_logger",
  "hex",
@@ -1241,10 +1245,11 @@ dependencies = [
 
 [[package]]
 name = "zkevm_opcode_defs"
-version = "0.1.0"
-source = "git+https://github.com/matter-labs/zkevm_opcode_defs.git?branch=v1.1.1#924ca853affd3f8a09feb19ae4d5b67c1567320d"
+version = "1.1.2"
+source = "git+https://github.com/matter-labs/zkevm_opcode_defs?branch=v1.1.2#b000abebc27f88919e0087b7604b8c71ba5b3daf"
 dependencies = [
  "bitflags",
  "ethereum-types",
  "lazy_static",
+ "sha2",
 ]

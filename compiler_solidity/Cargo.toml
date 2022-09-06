@@ -1,6 +1,6 @@
 [package]
 name = "compiler-solidity"
-version = "1.1.5"
+version = "1.2.0"
 authors = [
     "Alex Zarudnyy <a.zarudnyy@matterlabs.dev>",
 ]
@@ -28,15 +28,15 @@ serde = { version = "1.0", "features" = [ "derive" ] }
 serde_json = "1.0"
 rand = "0.8"
 regex = "1.6"
-semver = "1.0"
+semver = { version = "1.0", features = [ "serde" ] }
 hex = "0.4"
 num = "0.4"
 md5 = "0.7"
 
-zkevm-assembly = { git = "https://github.com/matter-labs/zkEVM-assembly", branch = "v1.1.1" }
+zkevm-assembly = { git = "https://github.com/matter-labs/zkEVM-assembly", branch = "v1.1.2" }
 
-compiler-common = { git = "https://github.com/matter-labs/compiler-common", branch = "vm1.1" }
-compiler-llvm-context = { git = "https://github.com/matter-labs/compiler-llvm-context", branch = "vm1.1" }
+compiler-common = { git = "https://github.com/matter-labs/compiler-common", branch = "vm1.2" }
+compiler-llvm-context = { git = "https://github.com/matter-labs/compiler-llvm-context", branch = "vm1.2" }
 
 #compiler-common = { path = "../../compiler-common" }
 #compiler-llvm-context = { path = "../../compiler-llvm-context" }
