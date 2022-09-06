@@ -42,6 +42,7 @@ pub fn build() -> anyhow::Result<()> {
             "-DLLVM_ENABLE_SPHINX='Off'",
             "-DLLVM_ENABLE_OCAMLDOC='Off'",
             "-DLLVM_ENABLE_BINDINGS='Off'",
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET='10.9'",
         ]),
         "LLVM building cmake",
     )?;

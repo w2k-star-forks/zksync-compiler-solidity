@@ -2,13 +2,17 @@
 //! The LLVM build script.
 //!
 
-pub(crate) mod linux_gnu;
-pub(crate) mod linux_musl;
-pub(crate) mod macos;
+pub(crate) mod aarch64_macos;
+pub(crate) mod arguments;
 pub(crate) mod utils;
+pub(crate) mod x86_64_linux_gnu;
+pub(crate) mod x86_64_linux_musl;
+pub(crate) mod x86_64_macos;
 
 use std::path::PathBuf;
 use std::process::Command;
+
+use self::arguments::Arguments;
 
 ///
 /// The entry.
@@ -22,8 +26,13 @@ fn main() {
 ///
 fn main_wrapper() -> anyhow::Result<()> {
     utils::check_presence("git")?;
+    let arguments = Arguments::new();
 
-    let llvm_tag = format!("v{}", env!("CARGO_PKG_VERSION"));
+    let llvm_tag = match arguments.tag {
+        Some(tag) => tag,
+        None => format!("v{}", env!("CARGO_PKG_VERSION")),
+    };
+
     let llvm_path = PathBuf::from("./compiler-llvm");
     if !llvm_path.exists() {
         utils::command(
@@ -54,16 +63,16 @@ fn main_wrapper() -> anyhow::Result<()> {
     if cfg!(target_arch = "x86_64") {
         if cfg!(target_os = "linux") {
             if cfg!(target_env = "gnu") {
-                linux_gnu::build()?;
+                x86_64_linux_gnu::build()?;
             } else if cfg!(target_env = "musl") {
-                linux_musl::build()?;
+                x86_64_linux_musl::build()?;
             }
         } else if cfg!(target_os = "macos") {
-            macos::build()?;
+            x86_64_macos::build()?;
         }
     } else if cfg!(target_arch = "aarch64") {
         if cfg!(target_os = "macos") {
-            macos::build()?;
+            aarch64_macos::build()?;
         }
     } else {
         anyhow::bail!("Unsupported on your machine");
