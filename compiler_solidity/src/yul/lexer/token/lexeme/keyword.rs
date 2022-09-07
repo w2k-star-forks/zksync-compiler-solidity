@@ -61,6 +61,9 @@ impl Keyword {
         };
 
         let length = lexeme.to_string().len();
+        if length != input.len() {
+            return None;
+        }
 
         Some(Token::new(Location::new(0, length), lexeme, length))
     }
