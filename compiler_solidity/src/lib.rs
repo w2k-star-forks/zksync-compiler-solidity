@@ -28,4 +28,5 @@ pub use self::solc::standard_json::output::contract::evm::bytecode::Bytecode as 
 pub use self::solc::standard_json::output::contract::evm::EVM as SolcStandardJsonOutputContractEVM;
 pub use self::solc::standard_json::output::contract::Contract as SolcStandardJsonOutputContract;
 pub use self::solc::standard_json::output::Output as SolcStandardJsonOutput;
+pub use self::solc::version::Version as SolcVersion;
 pub use self::solc::Compiler as SolcCompiler;

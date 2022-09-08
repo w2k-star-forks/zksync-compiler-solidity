@@ -23,6 +23,9 @@ pub struct CombinedJson {
     pub contracts: BTreeMap<String, Contract>,
     /// The `solc` compiler version.
     pub version: String,
+    /// The `solc` compiler long version.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub long_version: Option<String>,
     /// The `zksolc` compiler version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub zk_version: Option<String>,

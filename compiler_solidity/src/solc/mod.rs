@@ -5,6 +5,7 @@
 pub mod combined_json;
 pub mod pipeline;
 pub mod standard_json;
+pub mod version;
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -12,6 +13,7 @@ use std::path::PathBuf;
 use self::combined_json::CombinedJson;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
+use self::version::Version;
 
 ///
 /// The Solidity compiler.
@@ -183,7 +185,7 @@ impl Compiler {
     ///
     /// The `solc --version` mini-parser.
     ///
-    pub fn version(&self) -> anyhow::Result<semver::Version> {
+    pub fn version(&self) -> anyhow::Result<Version> {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.arg("--version");
         let output = command.output().map_err(|error| {
@@ -198,7 +200,7 @@ impl Compiler {
         }
 
         let stdout = String::from_utf8_lossy(output.stdout.as_slice());
-        let version: semver::Version = stdout
+        let long = stdout
             .lines()
             .nth(1)
             .ok_or_else(|| {
@@ -212,6 +214,8 @@ impl Compiler {
                     self.executable
                 )
             })?
+            .to_owned();
+        let default: semver::Version = long
             .split('+')
             .next()
             .ok_or_else(|| {
@@ -220,6 +224,6 @@ impl Compiler {
             .parse()
             .map_err(|error| anyhow::anyhow!("{} version parsing: {}", self.executable, error))?;
 
-        Ok(version)
+        Ok(Version::new(long, default))
     }
 }

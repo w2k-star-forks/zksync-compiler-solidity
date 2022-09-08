@@ -9,6 +9,7 @@ use std::path::Path;
 
 use crate::solc::combined_json::CombinedJson;
 use crate::solc::standard_json::output::Output as StandardJsonOutput;
+use crate::solc::version::Version as SolcVersion;
 
 use self::contract::Contract;
 
@@ -52,7 +53,8 @@ impl Build {
     pub fn write_to_combined_json(
         self,
         combined_json: &mut CombinedJson,
-        zk_version: &semver::Version,
+        solc_version: &SolcVersion,
+        zksolc_version: &semver::Version,
     ) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             let combined_json_contract = combined_json
@@ -70,7 +72,8 @@ impl Build {
             contract.write_to_combined_json(combined_json_contract)?;
         }
 
-        combined_json.zk_version = Some(zk_version.to_string());
+        combined_json.long_version = Some(solc_version.long.to_owned());
+        combined_json.zk_version = Some(zksolc_version.to_string());
 
         Ok(())
     }
@@ -81,8 +84,8 @@ impl Build {
     pub fn write_to_standard_json(
         mut self,
         standard_json: &mut StandardJsonOutput,
-        version: &semver::Version,
-        zk_version: &semver::Version,
+        solc_version: &SolcVersion,
+        zksolc_version: &semver::Version,
     ) -> anyhow::Result<()> {
         let contracts = match standard_json.contracts.as_mut() {
             Some(contracts) => contracts,
@@ -99,8 +102,9 @@ impl Build {
             }
         }
 
-        standard_json.version = Some(version.to_string());
-        standard_json.zk_version = Some(zk_version.to_string());
+        standard_json.version = Some(solc_version.default.to_string());
+        standard_json.long_version = Some(solc_version.long.to_owned());
+        standard_json.zk_version = Some(zksolc_version.to_string());
 
         Ok(())
     }
