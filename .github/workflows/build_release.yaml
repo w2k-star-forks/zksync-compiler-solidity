@@ -20,7 +20,7 @@ on:
 
 jobs:
   build_macos_arm64:
-    runs-on: [self-hosted, ci-runner-compiler, macOS, ARM64]
+    runs-on: [self-hosted, macOS, ARM64]
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
