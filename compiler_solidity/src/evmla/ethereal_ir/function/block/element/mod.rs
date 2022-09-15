@@ -870,6 +870,7 @@ where
                     input_size,
                     output_offset,
                     output_size,
+                    None,
                 )
             }
             InstructionName::CALLCODE => {
@@ -896,6 +897,7 @@ where
                     input_size,
                     output_offset,
                     output_size,
+                    None,
                 )
             }
             InstructionName::DELEGATECALL => {
@@ -918,6 +920,7 @@ where
                     input_size,
                     output_offset,
                     output_size,
+                    None,
                 )
             }
 

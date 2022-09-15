@@ -96,10 +96,20 @@ where
             context
                 .function_mut()
                 .stack
-                .insert(identifier.inner, pointer);
+                .insert(identifier.inner.clone(), pointer);
+
             let value = if let Some(expression) = self.expression {
                 match expression.into_llvm(context)? {
-                    Some(value) => value.to_llvm(),
+                    Some(mut value) => {
+                        if let Some(constant) = value.constant.take() {
+                            context
+                                .function_mut()
+                                .constants
+                                .insert(identifier.inner, constant);
+                        }
+
+                        value.to_llvm()
+                    }
                     None => r#type.const_zero().as_basic_value_enum(),
                 }
             } else {

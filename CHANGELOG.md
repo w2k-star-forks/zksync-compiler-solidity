@@ -6,6 +6,13 @@
 
 - Many improvements for the memory security and EVM-compatibility
 - Optimizations for the heap allocation
+- More LLVM optimizations
+- Support for solc v0.8.17
+
+### Changed
+
+- System contract calls now require a system call flag
+- The handling of `msg.value` became more robust
 
 ## [1.1.6] - 2022-09-02
 

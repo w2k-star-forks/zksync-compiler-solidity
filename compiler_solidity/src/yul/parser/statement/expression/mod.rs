@@ -112,11 +112,21 @@ impl Expression {
                             identifier.inner.as_str()
                         )
                     })?;
-                Ok(Some(
-                    context
-                        .build_load(pointer, identifier.inner.as_str())
-                        .into(),
-                ))
+
+                let constant = context
+                    .function()
+                    .constants
+                    .get(identifier.inner.as_str())
+                    .cloned();
+
+                let value = context.build_load(pointer, identifier.inner.as_str());
+
+                match constant {
+                    Some(constant) => Ok(Some(compiler_llvm_context::Argument::new_with_constant(
+                        value, constant,
+                    ))),
+                    None => Ok(Some(value.into())),
+                }
             }
             Self::FunctionCall(call) => Ok(call
                 .into_llvm(context)?

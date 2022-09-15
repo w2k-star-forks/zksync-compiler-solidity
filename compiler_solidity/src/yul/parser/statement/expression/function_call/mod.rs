@@ -6,6 +6,8 @@ pub mod name;
 
 use inkwell::types::BasicType;
 use inkwell::values::BasicValue;
+use num::BigUint;
+use num::FromPrimitive;
 
 use crate::yul::error::Error;
 use crate::yul::lexer::token::lexeme::symbol::Symbol;
@@ -648,15 +650,17 @@ impl FunctionCall {
             }
 
             Name::Call => {
-                let arguments = self.pop_arguments_llvm::<D, 7>(context)?;
+                let mut arguments = self.pop_arguments::<D, 7>(context)?;
 
-                let gas = arguments[0].into_int_value();
-                let address = arguments[1].into_int_value();
-                let value = arguments[2].into_int_value();
-                let input_offset = arguments[3].into_int_value();
-                let input_size = arguments[4].into_int_value();
-                let output_offset = arguments[5].into_int_value();
-                let output_size = arguments[6].into_int_value();
+                let gas = arguments[0].value.into_int_value();
+                let address = arguments[1].value.into_int_value();
+                let value = arguments[2].value.into_int_value();
+                let input_offset = arguments[3].value.into_int_value();
+                let input_size = arguments[4].value.into_int_value();
+                let output_offset = arguments[5].value.into_int_value();
+                let output_size = arguments[6].value.into_int_value();
+
+                let simulation = arguments[1].constant.take();
 
                 compiler_llvm_context::contract::call(
                     context,
@@ -668,6 +672,7 @@ impl FunctionCall {
                     input_size,
                     output_offset,
                     output_size,
+                    simulation,
                 )
             }
             Name::CallCode => {
@@ -675,14 +680,16 @@ impl FunctionCall {
                 Ok(Some(context.field_const(0).as_basic_value_enum()))
             }
             Name::StaticCall => {
-                let arguments = self.pop_arguments_llvm::<D, 6>(context)?;
+                let mut arguments = self.pop_arguments::<D, 6>(context)?;
 
-                let gas = arguments[0].into_int_value();
-                let address = arguments[1].into_int_value();
-                let input_offset = arguments[2].into_int_value();
-                let input_size = arguments[3].into_int_value();
-                let output_offset = arguments[4].into_int_value();
-                let output_size = arguments[5].into_int_value();
+                let gas = arguments[0].value.into_int_value();
+                let address = arguments[1].value.into_int_value();
+                let input_offset = arguments[2].value.into_int_value();
+                let input_size = arguments[3].value.into_int_value();
+                let output_offset = arguments[4].value.into_int_value();
+                let output_size = arguments[5].value.into_int_value();
+
+                let simulation = arguments[1].constant.take();
 
                 compiler_llvm_context::contract::call(
                     context,
@@ -694,6 +701,7 @@ impl FunctionCall {
                     input_size,
                     output_offset,
                     output_size,
+                    simulation,
                 )
             }
             Name::DelegateCall => {
@@ -716,6 +724,7 @@ impl FunctionCall {
                     input_size,
                     output_offset,
                     output_size,
+                    None,
                 )
             }
 
@@ -952,8 +961,31 @@ impl FunctionCall {
                         )
                         .map(Some)
                     }
+                    identifier @ "raw_far_call" => {
+                        const ARGUMENTS_COUNT: usize = 4;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::raw_far_call(
+                            context,
+                            context.runtime.far_call,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                            arguments[2].into_int_value(),
+                            arguments[3].into_int_value(),
+                        )
+                        .map(Some)
+                    }
                     identifier @ "system_call" => {
-                        const ARGUMENTS_COUNT: usize = 5;
+                        const ARGUMENTS_COUNT: usize = 6;
                         if input_size != ARGUMENTS_COUNT {
                             anyhow::bail!(
                                 "{} Internal function `{}` expected {} arguments, found {}",
@@ -969,9 +1001,10 @@ impl FunctionCall {
                             context,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
+                            arguments[4].into_int_value(),
+                            arguments[5].into_int_value(),
                             arguments[2].into_int_value(),
                             arguments[3].into_int_value(),
-                            arguments[4].into_int_value(),
                         )
                         .map(Some)
                     }
@@ -993,6 +1026,108 @@ impl FunctionCall {
                             arguments[0].into_int_value(),
                         )
                         .map(Some)
+                    }
+                    identifier @ "set_pubdata_price" => {
+                        const ARGUMENTS_COUNT: usize = 1;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::set_pubdata_price(
+                            context,
+                            arguments[0].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                    identifier @ "increment_tx_counter" => {
+                        const ARGUMENTS_COUNT: usize = 0;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        compiler_llvm_context::contract::simulation::increment_tx_counter(context)
+                            .map(Some)
+                    }
+                    identifier
+                        if identifier
+                            .starts_with(compiler_llvm_context::verbatim::GLOBAL_GETTER_PREFIX) =>
+                    {
+                        const ARGUMENTS_COUNT: usize = 0;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let index = match identifier
+                            .strip_prefix(compiler_llvm_context::verbatim::GLOBAL_GETTER_PREFIX)
+                        {
+                            Some(identifier)
+                                if identifier == compiler_llvm_context::GLOBAL_CALLDATA_ABI =>
+                            {
+                                BigUint::from_usize(
+                                    compiler_llvm_context::GLOBAL_INDEX_CALLDATA_ABI,
+                                )
+                            }
+                            Some(identifier)
+                                if identifier == compiler_llvm_context::GLOBAL_CALL_FLAGS =>
+                            {
+                                BigUint::from_usize(compiler_llvm_context::GLOBAL_INDEX_CALL_FLAGS)
+                            }
+                            Some(identifier)
+                                if identifier
+                                    .starts_with(compiler_llvm_context::GLOBAL_EXTRA_ABI_DATA) =>
+                            {
+                                match identifier
+                                    .strip_prefix(compiler_llvm_context::GLOBAL_EXTRA_ABI_DATA)
+                                {
+                                    Some("_1") => BigUint::from_usize(
+                                        compiler_llvm_context::GLOBAL_INDEX_EXTRA_ABI_DATA_1,
+                                    ),
+                                    Some("_2") => BigUint::from_usize(
+                                        compiler_llvm_context::GLOBAL_INDEX_EXTRA_ABI_DATA_2,
+                                    ),
+                                    suffix => anyhow::bail!(
+                                        "{} Invalid extra ABI data suffix `{:?}`",
+                                        location,
+                                        suffix
+                                    ),
+                                }
+                            }
+                            Some(identifier)
+                                if identifier == compiler_llvm_context::GLOBAL_RETURN_DATA_ABI =>
+                            {
+                                BigUint::from_usize(
+                                    compiler_llvm_context::GLOBAL_INDEX_RETURN_DATA_ABI,
+                                )
+                            }
+                            identifier => anyhow::bail!(
+                                "{} Invalid global variable identifier `{:?}`",
+                                location,
+                                identifier
+                            ),
+                        }
+                        .expect("Always valid");
+
+                        compiler_llvm_context::contract::simulation::get_global(context, index)
+                            .map(Some)
                     }
                     identifier @ "throw" => {
                         const ARGUMENTS_COUNT: usize = 0;

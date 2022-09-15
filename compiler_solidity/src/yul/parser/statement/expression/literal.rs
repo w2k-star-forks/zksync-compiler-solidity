@@ -3,6 +3,9 @@
 //!
 
 use inkwell::values::BasicValue;
+use num::Num;
+use num::One;
+use num::Zero;
 
 use crate::yul::error::Error;
 use crate::yul::lexer::token::lexeme::literal::boolean::Boolean as BooleanLiteral;
@@ -94,23 +97,41 @@ impl Literal {
                         false,
                     )
                     .as_basic_value_enum();
-                compiler_llvm_context::Argument::new(value)
+
+                let constant = match inner {
+                    BooleanLiteral::False => num::BigUint::zero(),
+                    BooleanLiteral::True => num::BigUint::one(),
+                };
+
+                compiler_llvm_context::Argument::new_with_constant(value, constant)
             }
             LexicalLiteral::Integer(inner) => {
                 let r#type = self.yul_type.unwrap_or_default().into_llvm(context);
                 let value = match inner {
-                    IntegerLiteral::Decimal { inner } => r#type.const_int_from_string(
+                    IntegerLiteral::Decimal { ref inner } => r#type.const_int_from_string(
                         inner.as_str(),
                         inkwell::types::StringRadix::Decimal,
                     ),
-                    IntegerLiteral::Hexadecimal { inner } => r#type.const_int_from_string(
+                    IntegerLiteral::Hexadecimal { ref inner } => r#type.const_int_from_string(
                         &inner["0x".len()..],
                         inkwell::types::StringRadix::Hexadecimal,
                     ),
                 }
                 .expect("The value is valid")
                 .as_basic_value_enum();
-                compiler_llvm_context::Argument::new(value)
+
+                let constant = match inner {
+                    IntegerLiteral::Decimal { ref inner } => {
+                        num::BigUint::from_str_radix(inner.as_str(), compiler_common::BASE_DECIMAL)
+                    }
+                    IntegerLiteral::Hexadecimal { ref inner } => num::BigUint::from_str_radix(
+                        &inner["0x".len()..],
+                        compiler_common::BASE_HEXADECIMAL,
+                    ),
+                }
+                .expect("Always valid");
+
+                compiler_llvm_context::Argument::new_with_constant(value, constant)
             }
             LexicalLiteral::String(inner) => {
                 let string = inner.to_string();
