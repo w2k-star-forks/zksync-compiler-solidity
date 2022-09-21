@@ -16,7 +16,7 @@ use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::code::Code;
 
 ///
-/// The YUL object.
+/// The upper-level YUL object, representing the deploy code.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Object {
@@ -26,9 +26,11 @@ pub struct Object {
     pub identifier: String,
     /// The code.
     pub code: Code,
-    /// The optional inner object.
+    /// The optional inner object, representing the runtime code.
     pub inner_object: Option<Box<Self>>,
-    /// The factory dependency objects.
+    /// The factory dependency objects, which are represented by nested Yul object. The nested
+    /// objects are duplicates of the upper-level objects describing the dependencies, so only
+    /// their identifiers are preserved. The identifiers are used to address upper-level objects.
     pub factory_dependencies: HashSet<String>,
 }
 

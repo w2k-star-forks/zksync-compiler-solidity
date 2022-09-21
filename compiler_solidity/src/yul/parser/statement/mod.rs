@@ -33,7 +33,7 @@ use self::switch::Switch;
 use self::variable_declaration::VariableDeclaration;
 
 ///
-/// The block statement.
+/// The Yul block statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {

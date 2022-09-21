@@ -17,7 +17,7 @@ use crate::yul::parser::statement::expression::function_call::name::Name as Func
 use crate::yul::parser::statement::expression::Expression;
 
 ///
-/// The variable declaration statement.
+/// The Yul variable declaration statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct VariableDeclaration {

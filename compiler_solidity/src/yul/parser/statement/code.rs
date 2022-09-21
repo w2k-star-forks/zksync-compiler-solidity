@@ -12,7 +12,7 @@ use crate::yul::parser::error::Error as ParserError;
 use crate::yul::parser::statement::block::Block;
 
 ///
-/// The YUL code.
+/// The YUL code entity, which is the first block of the object.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Code {

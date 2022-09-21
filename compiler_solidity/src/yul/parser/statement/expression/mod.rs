@@ -18,7 +18,7 @@ use self::function_call::FunctionCall;
 use self::literal::Literal;
 
 ///
-/// The expression statement.
+/// The Yul expression statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {

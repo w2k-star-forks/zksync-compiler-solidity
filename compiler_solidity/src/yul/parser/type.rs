@@ -12,6 +12,8 @@ use crate::yul::parser::error::Error as ParserError;
 ///
 /// The YUL source code type.
 ///
+/// The type is not currently in use, so all values have the `uint256` type by default.
+///
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     /// The `bool` type.

@@ -10,7 +10,7 @@ use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::Expression;
 
 ///
-/// The if-conditional statement.
+/// The Yul if-conditional statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct IfConditional {

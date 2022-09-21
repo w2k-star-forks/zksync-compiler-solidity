@@ -14,7 +14,7 @@ use crate::yul::parser::statement::expression::Expression;
 use crate::yul::parser::statement::Statement;
 
 ///
-/// The source code block.
+/// The Yul source code block.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Block {

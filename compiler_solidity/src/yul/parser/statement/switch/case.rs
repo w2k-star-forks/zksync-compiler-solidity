@@ -12,7 +12,7 @@ use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::literal::Literal;
 
 ///
-/// The switch statement case.
+/// The Yul switch statement case.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Case {

@@ -21,7 +21,7 @@ use crate::yul::parser::statement::expression::Expression;
 use self::name::Name;
 
 ///
-/// The function call subexpression.
+/// The Yul function call subexpression.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionCall {

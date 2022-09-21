@@ -127,7 +127,7 @@ source = "git+https://github.com/matter-labs/compiler-common?branch=vm1.2#c2fb37
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.2#9b100d78986ec76952e2c0219572b5f4105b0677"
+source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.2#3e8193c6f51af1dbc9973eec95216923a29b89dc"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -648,9 +648,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f7254b99e31cad77da24b08ebf628882739a608578bb1bcdfc1f9c21260d7c0"
+checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "parity-scale-codec"

@@ -18,6 +18,10 @@ use crate::yul::parser::statement::expression::function_call::name::Name as Func
 ///
 /// The function definition statement.
 ///
+/// All functions are translated in two steps:
+/// 1. The hoisted declaration
+/// 2. The definition, which now has the access to all function signatures
+///
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionDefinition {
     /// The location.

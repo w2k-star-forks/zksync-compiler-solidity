@@ -10,7 +10,7 @@ use crate::yul::parser::statement::block::Block;
 use crate::yul::parser::statement::expression::Expression;
 
 ///
-/// The for-loop statement.
+/// The Yul for-loop statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForLoop {

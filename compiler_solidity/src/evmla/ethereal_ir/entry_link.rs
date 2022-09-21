@@ -9,6 +9,8 @@ use crate::evmla::ethereal_ir::EtherealIR;
 ///
 /// The Ethereal IR entry function link.
 ///
+/// The link represents branching between the deploy and runtime code.
+///
 #[derive(Debug, Clone)]
 pub struct EntryLink {
     /// The code part type.

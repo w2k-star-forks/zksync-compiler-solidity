@@ -17,7 +17,7 @@ use crate::yul::parser::statement::expression::Expression;
 use self::case::Case;
 
 ///
-/// The switch statement.
+/// The Yul switch statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Switch {

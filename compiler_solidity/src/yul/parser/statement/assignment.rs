@@ -13,7 +13,7 @@ use crate::yul::parser::identifier::Identifier;
 use crate::yul::parser::statement::expression::Expression;
 
 ///
-/// The assignment expression statement.
+/// The Yul assignment expression statement.
 ///
 #[derive(Debug, PartialEq, Clone)]
 pub struct Assignment {
