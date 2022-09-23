@@ -11,7 +11,7 @@ use crate::yul::lexer::token::Token;
 ///
 /// The keyword lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Keyword {
     /// The `object` keyword.
     Object,

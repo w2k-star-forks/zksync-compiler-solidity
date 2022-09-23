@@ -23,7 +23,7 @@ use self::name::Name;
 ///
 /// The Yul function call subexpression.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionCall {
     /// The location.
     pub location: Location,

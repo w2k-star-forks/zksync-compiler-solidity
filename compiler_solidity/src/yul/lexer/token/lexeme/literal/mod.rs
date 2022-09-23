@@ -13,7 +13,7 @@ use self::string::String;
 ///
 /// The literal lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Literal {
     /// A boolean literal, like `true`, or `false`.
     Boolean(Boolean),

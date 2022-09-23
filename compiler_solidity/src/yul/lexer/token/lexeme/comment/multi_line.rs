@@ -9,7 +9,7 @@ use crate::yul::lexer::token::Token;
 ///
 /// The multi-line comment lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {}
 
 impl Comment {

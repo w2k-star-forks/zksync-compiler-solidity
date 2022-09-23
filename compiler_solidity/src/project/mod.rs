@@ -9,9 +9,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
-
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::dump_flag::DumpFlag;
@@ -150,7 +147,7 @@ impl Project {
             .cloned()
             .collect();
         let _: Vec<()> = contract_paths
-            .into_par_iter()
+            .into_iter()
             .map(|contract_path| {
                 Self::compile(
                     project.clone(),

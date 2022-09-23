@@ -5,7 +5,7 @@
 ///
 /// The function name.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Name {
     /// The user-defined function.
     UserDefined(String),

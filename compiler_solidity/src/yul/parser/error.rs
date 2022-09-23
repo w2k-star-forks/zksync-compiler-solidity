@@ -4,7 +4,7 @@
 
 use crate::yul::lexer::token::location::Location;
 
-#[derive(Debug, thiserror::Error, PartialEq)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum Error {
     #[error("{location} Expected one of {expected:?}, found `{found}`")]
     InvalidToken {

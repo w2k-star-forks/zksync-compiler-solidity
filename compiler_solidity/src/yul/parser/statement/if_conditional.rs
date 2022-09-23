@@ -12,7 +12,7 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 /// The Yul if-conditional statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IfConditional {
     /// The location.
     pub location: Location,

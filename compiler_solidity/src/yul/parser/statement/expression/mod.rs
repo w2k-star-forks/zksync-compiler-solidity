@@ -20,7 +20,7 @@ use self::literal::Literal;
 ///
 /// The Yul expression statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
     /// The function call subexpression.
     FunctionCall(FunctionCall),

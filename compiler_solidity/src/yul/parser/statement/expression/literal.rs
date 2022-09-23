@@ -22,7 +22,7 @@ use crate::yul::parser::r#type::Type;
 ///
 /// Represents a literal in YUL without differentiating its type.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Literal {
     /// The location.
     pub location: Location,

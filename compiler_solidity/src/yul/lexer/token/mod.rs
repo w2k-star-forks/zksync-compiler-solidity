@@ -13,7 +13,7 @@ use self::location::Location;
 ///
 /// Contains a lexeme and its location.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     /// The token location.
     pub location: Location,

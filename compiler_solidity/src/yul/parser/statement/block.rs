@@ -16,7 +16,7 @@ use crate::yul::parser::statement::Statement;
 ///
 /// The Yul source code block.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
     /// The location.
     pub location: Location,

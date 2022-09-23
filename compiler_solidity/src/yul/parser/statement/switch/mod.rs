@@ -19,7 +19,7 @@ use self::case::Case;
 ///
 /// The Yul switch statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Switch {
     /// The location.
     pub location: Location,

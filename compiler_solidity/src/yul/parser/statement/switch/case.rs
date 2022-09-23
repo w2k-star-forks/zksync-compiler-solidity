@@ -14,7 +14,7 @@ use crate::yul::parser::statement::expression::literal::Literal;
 ///
 /// The Yul switch statement case.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Case {
     /// The location.
     pub location: Location,

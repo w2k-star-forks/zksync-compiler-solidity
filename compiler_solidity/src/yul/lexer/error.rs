@@ -4,7 +4,7 @@
 
 use crate::yul::lexer::token::location::Location;
 
-#[derive(Debug, thiserror::Error, PartialEq)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum Error {
     /// The invalid lexeme error.
     #[error("{location} Invalid character sequence `{sequence}`")]

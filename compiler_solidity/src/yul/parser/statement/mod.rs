@@ -35,7 +35,7 @@ use self::variable_declaration::VariableDeclaration;
 ///
 /// The Yul block statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Statement {
     /// The object element.
     Object(Object),

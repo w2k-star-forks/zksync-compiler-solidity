@@ -15,7 +15,7 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 /// The Yul assignment expression statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Assignment {
     /// The location.
     pub location: Location,

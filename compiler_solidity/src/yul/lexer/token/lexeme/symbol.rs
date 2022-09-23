@@ -9,7 +9,7 @@ use crate::yul::lexer::token::Token;
 ///
 /// The symbol lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Symbol {
     /// The `:=` symbol.
     Assignment,

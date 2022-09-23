@@ -12,7 +12,7 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 /// The Yul for-loop statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ForLoop {
     /// The location.
     pub location: Location,

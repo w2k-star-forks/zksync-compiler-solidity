@@ -10,7 +10,7 @@ use crate::yul::lexer::token::Token;
 ///
 /// The integer literal lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Integer {
     /// An integer literal, like `42`.
     Decimal {

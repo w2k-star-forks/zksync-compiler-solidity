@@ -10,7 +10,7 @@ use crate::yul::lexer::token::Token;
 ///
 /// The identifier lexeme.
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Identifier {
     /// The inner string.
     pub inner: String,

@@ -19,7 +19,7 @@ use crate::yul::parser::statement::expression::Expression;
 ///
 /// The Yul variable declaration statement.
 ///
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VariableDeclaration {
     /// The location.
     pub location: Location,
