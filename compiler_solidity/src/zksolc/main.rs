@@ -94,7 +94,8 @@ fn main_inner() -> anyhow::Result<()> {
         } else {
             compiler_llvm_context::OptimizerSettings::none()
         };
-        project.compile_all(optimizer_settings, dump_flags)
+        let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
+        project.compile_all(target_machine, optimizer_settings, dump_flags)
     } else {
         let output_selection =
             compiler_solidity::SolcStandardJsonInputSettings::get_output_selection(
@@ -165,7 +166,8 @@ fn main_inner() -> anyhow::Result<()> {
         } else {
             compiler_llvm_context::OptimizerSettings::none()
         };
-        let build = project.compile_all(optimizer_settings, dump_flags)?;
+        let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
+        let build = project.compile_all(target_machine, optimizer_settings, dump_flags)?;
         if arguments.standard_json {
             build.write_to_standard_json(&mut solc_output, &solc_version, &zksolc_version)?;
             serde_json::to_writer(std::io::stdout(), &solc_output)?;

@@ -9,6 +9,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::RwLock;
 
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::dump_flag::DumpFlag;
@@ -66,6 +69,7 @@ impl Project {
     pub fn compile(
         project: Arc<RwLock<Self>>,
         contract_path: &str,
+        target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         dump_flags: Vec<DumpFlag>,
     ) {
@@ -85,7 +89,12 @@ impl Project {
 
                 let identifier = contract.identifier().to_owned();
                 let abi = contract.abi.take();
-                match contract.compile(project.clone(), optimizer_settings, dump_flags) {
+                match contract.compile(
+                    project.clone(),
+                    target_machine,
+                    optimizer_settings,
+                    dump_flags,
+                ) {
                     Ok(build) => {
                         let build =
                             ContractBuild::new(contract_path.to_owned(), identifier, build, abi);
@@ -134,6 +143,7 @@ impl Project {
     #[allow(clippy::needless_collect)]
     pub fn compile_all(
         self,
+        target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         dump_flags: Vec<DumpFlag>,
     ) -> anyhow::Result<Build> {
@@ -147,11 +157,12 @@ impl Project {
             .cloned()
             .collect();
         let _: Vec<()> = contract_paths
-            .into_iter()
+            .into_par_iter()
             .map(|contract_path| {
                 Self::compile(
                     project.clone(),
                     contract_path.as_str(),
+                    target_machine.clone(),
                     optimizer_settings.clone(),
                     dump_flags.clone(),
                 );
@@ -226,6 +237,7 @@ impl compiler_llvm_context::Dependency for Project {
     fn compile(
         project: Arc<RwLock<Self>>,
         identifier: &str,
+        target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         dump_flags: Vec<compiler_llvm_context::DumpFlag>,
     ) -> anyhow::Result<String> {
@@ -234,6 +246,7 @@ impl compiler_llvm_context::Dependency for Project {
         Self::compile(
             project.clone(),
             contract_path.as_str(),
+            target_machine,
             optimizer_settings,
             DumpFlag::from_context(dump_flags.as_slice()),
         );

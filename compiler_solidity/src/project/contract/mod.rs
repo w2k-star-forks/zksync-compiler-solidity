@@ -67,11 +67,12 @@ impl Contract {
     pub fn compile(
         mut self,
         project: Arc<RwLock<Project>>,
+        target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         dump_flags: Vec<DumpFlag>,
     ) -> anyhow::Result<compiler_llvm_context::Build> {
         let llvm = inkwell::context::Context::create();
-        let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings)?;
+        let optimizer = compiler_llvm_context::Optimizer::new(target_machine, optimizer_settings);
         let dump_flags = compiler_llvm_context::DumpFlag::initialize(
             dump_flags.contains(&DumpFlag::Yul),
             dump_flags.contains(&DumpFlag::EthIR),
