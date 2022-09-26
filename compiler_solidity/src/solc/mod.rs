@@ -28,7 +28,7 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "solc";
 
     /// The last supported version of `solc`.
-    pub const LAST_SUPPORTED_VERSION: semver::Version = semver::Version::new(0, 8, 16);
+    pub const LAST_SUPPORTED_VERSION: semver::Version = semver::Version::new(0, 8, 17);
 
     /// The first version of `solc`, where Yul is used by default.
     pub const FIRST_YUL_VERSION: semver::Version = semver::Version::new(0, 8, 0);
