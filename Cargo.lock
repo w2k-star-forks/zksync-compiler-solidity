@@ -87,9 +87,9 @@ checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
 
 [[package]]
 name = "cc"
-version = "1.0.41"
+version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dae9c4b8fedcae85592ba623c4fd08cfdab3e3b72d6df780c6ead964a69bfff"
+checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
 
 [[package]]
 name = "cfg-if"
@@ -127,7 +127,7 @@ source = "git+https://github.com/matter-labs/compiler-common?branch=vm1.2#c2fb37
 [[package]]
 name = "compiler-llvm-context"
 version = "0.0.0"
-source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.2#ec0292bba3f21969f4ba7ca7cb3a99bfbc9c8bdf"
+source = "git+https://github.com/matter-labs/compiler-llvm-context?branch=vm1.2#c9da45058784ca4a77d4eecc534a313c3573e7e0"
 dependencies = [
  "anyhow",
  "compiler-common",
@@ -439,8 +439,8 @@ dependencies = [
 
 [[package]]
 name = "llvm-sys"
-version = "130.0.2"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs#8d0238c25ba02ef72b82d456b3187480d012f0ec"
+version = "130.0.3"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs#2ece1d4fed1296044b4673fc393be8ba9ec49175"
 dependencies = [
  "cc",
  "lazy_static",
@@ -712,9 +712,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.43"
+version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a2ca2c61bc9f3d74d2886294ab7b9853abd9c1ad903a3ac7815c58989bb7bab"
+checksum = "7bd7356a8122b6c4a24a82b278680c73357984ca2fc79a0f9fa6dea7dced7c58"
 dependencies = [
  "unicode-ident",
 ]
@@ -976,18 +976,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.35"
+version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c53f98874615aea268107765aa1ed8f6116782501d18e53d08b471733bea6c85"
+checksum = "0a99cb8c4b9a8ef0e7907cd3b617cc8dc04d571c4e73c8ae403d80ac160bb122"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.35"
+version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8b463991b4eab2d801e724172285ec4195c650e8ec79b149e6c2a8e6dd3f783"
+checksum = "3a891860d3c8d66fec8e73ddb3765f90082374dbaaa833407b904a94f1a7eb43"
 dependencies = [
  "proc-macro2",
  "quote",
