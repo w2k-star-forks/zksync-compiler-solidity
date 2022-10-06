@@ -113,22 +113,30 @@ where
         };
 
         if self.bindings.len() == 1 {
-            let identifier = self.bindings.remove(0).inner;
-            context.build_store(
-                context.function().stack[identifier.as_str()],
-                value.to_llvm(),
-            );
+            let identifier = self.bindings.remove(0);
+            let pointer = context
+                .current_function()
+                .borrow()
+                .get_stack_pointer(identifier.inner.as_str())
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "{} Assignment to an undeclared variable `{}`",
+                        identifier.location,
+                        identifier.inner,
+                    )
+                })?;
+            context.build_store(pointer, value.to_llvm());
             return Ok(());
         }
 
         let llvm_type = value.to_llvm().into_struct_value().get_type();
-        let pointer = context.build_alloca(llvm_type, "assignment_pointer");
-        context.build_store(pointer, value.to_llvm());
+        let tuple_pointer = context.build_alloca(llvm_type, "assignment_pointer");
+        context.build_store(tuple_pointer, value.to_llvm());
 
         for (index, binding) in self.bindings.into_iter().enumerate() {
-            let pointer = unsafe {
+            let field_pointer = unsafe {
                 context.builder().build_gep(
-                    pointer,
+                    tuple_pointer,
                     &[
                         context.field_const(0),
                         context
@@ -139,12 +147,22 @@ where
                 )
             };
 
+            let binding_pointer = context
+                .current_function()
+                .borrow()
+                .get_stack_pointer(binding.inner.as_str())
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "{} Assignment to an undeclared variable `{}`",
+                        binding.location,
+                        binding.inner,
+                    )
+                })?;
             let value = context.build_load(
-                pointer,
+                field_pointer,
                 format!("assignment_binding_{}_value", index).as_str(),
             );
-
-            context.build_store(context.function().stack[binding.inner.as_str()], value);
+            context.build_store(binding_pointer, value);
         }
 
         Ok(())

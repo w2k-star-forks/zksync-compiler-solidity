@@ -47,10 +47,10 @@ impl Element {
     where
         D: compiler_llvm_context::Dependency,
     {
-        let input_size = self.instruction.input_size(&context.evm().version);
+        let input_size = self.instruction.input_size(&context.evmla().version);
         let mut arguments = Vec::with_capacity(input_size);
         for index in 0..input_size {
-            let pointer = context.evm().stack
+            let pointer = context.evmla().stack
                 [self.stack.elements.len() - self.instruction.output_size() - index - 1]
                 .to_llvm()
                 .into_pointer_value();
@@ -70,10 +70,10 @@ impl Element {
     where
         D: compiler_llvm_context::Dependency,
     {
-        let input_size = self.instruction.input_size(&context.evm().version);
+        let input_size = self.instruction.input_size(&context.evmla().version);
         let mut arguments = Vec::with_capacity(input_size);
         for index in 0..input_size {
-            let argument = context.evm().stack
+            let argument = context.evmla().stack
                 [self.stack.elements.len() - self.instruction.output_size() - index - 1]
                 .to_owned();
             arguments.push(argument);
@@ -90,7 +90,7 @@ where
         mut self,
         context: &mut compiler_llvm_context::Context<'_, D>,
     ) -> anyhow::Result<()> {
-        let input_size = self.instruction.input_size(&context.evm().version);
+        let input_size = self.instruction.input_size(&context.evmla().version);
         let mut original = self.instruction.value.clone();
 
         let value = match self.instruction.name {
@@ -665,7 +665,9 @@ where
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
 
-                let offset = context.get_immutable(key.as_str());
+                let offset = context
+                    .solidity_mut()
+                    .get_or_allocate_immutable(key.as_str());
 
                 let index = context.field_const(offset as u64);
                 compiler_llvm_context::immutable::load(context, index)
@@ -678,7 +680,7 @@ where
                     .value
                     .ok_or_else(|| anyhow::anyhow!("Instruction value missing"))?;
 
-                let offset = context.allocate_immutable(key.as_str());
+                let offset = context.solidity_mut().allocate_immutable(key.as_str());
 
                 let index = context.field_const(offset as u64);
                 let value = arguments.pop().expect("Always exists").into_int_value();
@@ -862,7 +864,7 @@ where
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.far_call,
+                    context.runtime().far_call,
                     gas,
                     address,
                     Some(value),
@@ -889,7 +891,7 @@ where
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.static_call,
+                    context.runtime().static_call,
                     gas,
                     address,
                     None,
@@ -912,7 +914,7 @@ where
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.delegate_call,
+                    context.runtime().delegate_call,
                     gas,
                     address,
                     None,
@@ -1030,11 +1032,12 @@ where
         }?;
 
         if let Some(value) = value {
-            let pointer = context.evm().stack[self.stack.elements.len() - input_size - 1]
+            let pointer = context.evmla().stack[self.stack.elements.len() - input_size - 1]
                 .to_llvm()
                 .into_pointer_value();
             context.build_store(pointer, value);
-            context.evm_mut().stack[self.stack.elements.len() - input_size - 1].original = original;
+            context.evmla_mut().stack[self.stack.elements.len() - input_size - 1].original =
+                original;
         }
 
         Ok(())

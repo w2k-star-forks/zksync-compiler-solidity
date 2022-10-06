@@ -125,7 +125,7 @@ where
     D: compiler_llvm_context::Dependency,
 {
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let current_function = context.function().to_owned();
+        let current_function = context.current_function().borrow().name().to_owned();
         let current_block = context.basic_block();
 
         let mut functions = Vec::with_capacity(self.statements.len());
@@ -145,7 +145,7 @@ where
             function.into_llvm(context)?;
         }
 
-        context.set_function(current_function.clone());
+        context.set_current_function(current_function.as_str())?;
         context.set_basic_block(current_block);
         for statement in local_statements.into_iter() {
             if context.basic_block().get_terminator().is_some() {
@@ -173,7 +173,9 @@ where
                     break;
                 }
                 Statement::Leave(_location) => {
-                    context.build_unconditional_branch(context.function().return_block);
+                    context.build_unconditional_branch(
+                        context.current_function().borrow().return_block(),
+                    );
                     break;
                 }
                 statement => anyhow::bail!(

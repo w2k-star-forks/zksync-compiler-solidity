@@ -115,17 +115,12 @@ impl FunctionCall {
                     let value = argument.into_llvm(context)?.expect("Always exists").value;
                     values.push(value);
                 }
-                let function = context
-                    .functions
-                    .get(name.as_str())
-                    .cloned()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("{} Undeclared function `{}`", location, name)
-                    })?;
+                let function = context.get_function(name.as_str()).ok_or_else(|| {
+                    anyhow::anyhow!("{} Undeclared function `{}`", location, name)
+                })?;
+                let r#return = function.borrow().r#return();
 
-                if let Some(compiler_llvm_context::FunctionReturn::Compound { size, .. }) =
-                    function.r#return
-                {
+                if let compiler_llvm_context::FunctionReturn::Compound { size, .. } = r#return {
                     let r#type =
                         context
                             .structure_type(vec![context.field_type().as_basic_type_enum(); size]);
@@ -138,7 +133,7 @@ impl FunctionCall {
                 }
 
                 let function_pointer = context.builder().build_bitcast(
-                    function.value,
+                    function.borrow().inner(),
                     context
                         .field_type()
                         .ptr_type(compiler_llvm_context::AddressSpace::Stack.into()),
@@ -149,25 +144,24 @@ impl FunctionCall {
                     function_pointer.into_pointer_value().as_basic_value_enum(),
                 );
 
-                if function.value.count_params() as usize != (values.len() - 2) {
+                let expected_arguments_count = function.borrow().inner().count_params() as usize;
+                if expected_arguments_count != (values.len() - 2) {
                     anyhow::bail!(
                         "{} Function `{}` expected {} arguments, found {}",
                         location,
                         name,
-                        function.value.count_params(),
+                        expected_arguments_count,
                         values.len()
                     );
                 }
 
                 let return_value = context.build_invoke_near_call_abi(
-                    function.value,
+                    function.borrow().inner(),
                     values,
                     format!("{}_near_call", name).as_str(),
                 );
 
-                if let Some(compiler_llvm_context::FunctionReturn::Compound { .. }) =
-                    function.r#return
-                {
+                if let compiler_llvm_context::FunctionReturn::Compound { .. } = r#return {
                     let return_pointer = return_value.expect("Always exists").into_pointer_value();
                     let return_value = context.build_load(
                         return_pointer,
@@ -184,17 +178,12 @@ impl FunctionCall {
                     let value = argument.into_llvm(context)?.expect("Always exists").value;
                     values.push(value);
                 }
-                let function = context
-                    .functions
-                    .get(name.as_str())
-                    .cloned()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("{} Undeclared function `{}`", location, name)
-                    })?;
+                let function = context.get_function(name.as_str()).ok_or_else(|| {
+                    anyhow::anyhow!("{} Undeclared function `{}`", location, name)
+                })?;
+                let r#return = function.borrow().r#return();
 
-                if let Some(compiler_llvm_context::FunctionReturn::Compound { size, .. }) =
-                    function.r#return
-                {
+                if let compiler_llvm_context::FunctionReturn::Compound { size, .. } = r#return {
                     let r#type =
                         context
                             .structure_type(vec![context.field_type().as_basic_type_enum(); size]);
@@ -204,25 +193,24 @@ impl FunctionCall {
                     values.insert(0, pointer.as_basic_value_enum());
                 }
 
-                if function.value.count_params() as usize != values.len() {
+                let expected_arguments_count = function.borrow().inner().count_params() as usize;
+                if expected_arguments_count != values.len() {
                     anyhow::bail!(
                         "{} Function `{}` expected {} arguments, found {}",
                         location,
                         name,
-                        function.value.count_params(),
+                        expected_arguments_count,
                         values.len()
                     );
                 }
 
                 let return_value = context.build_invoke(
-                    function.value,
+                    function.borrow().inner(),
                     values.as_slice(),
                     format!("{}_call", name).as_str(),
                 );
 
-                if let Some(compiler_llvm_context::FunctionReturn::Compound { .. }) =
-                    function.r#return
-                {
+                if let compiler_llvm_context::FunctionReturn::Compound { .. } = r#return {
                     let return_pointer = return_value.expect("Always exists").into_pointer_value();
                     let return_value = context
                         .build_load(return_pointer, format!("{}_return_value", name).as_str());
@@ -506,7 +494,9 @@ impl FunctionCall {
                     ));
                 }
 
-                let offset = context.get_immutable(key.as_str());
+                let offset = context
+                    .solidity_mut()
+                    .get_or_allocate_immutable(key.as_str());
 
                 let index = context.field_const(offset as u64);
 
@@ -522,7 +512,7 @@ impl FunctionCall {
                     return Ok(None);
                 }
 
-                let offset = context.allocate_immutable(key.as_str());
+                let offset = context.solidity_mut().allocate_immutable(key.as_str());
 
                 let index = context.field_const(offset as u64);
                 let value = arguments[2].value.into_int_value();
@@ -667,7 +657,7 @@ impl FunctionCall {
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.far_call,
+                    context.runtime().far_call,
                     gas,
                     address,
                     Some(value),
@@ -699,7 +689,7 @@ impl FunctionCall {
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.static_call,
+                    context.runtime().static_call,
                     gas,
                     address,
                     None,
@@ -727,7 +717,7 @@ impl FunctionCall {
 
                 compiler_llvm_context::contract::call(
                     context,
-                    context.runtime.delegate_call,
+                    context.runtime().delegate_call,
                     gas,
                     address,
                     None,
@@ -966,7 +956,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::mimic_call(
                             context,
-                            context.runtime.mimic_call,
+                            context.runtime().mimic_call,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
                             arguments[2],
@@ -989,7 +979,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::mimic_call(
                             context,
-                            context.runtime.mimic_call_byref,
+                            context.runtime().mimic_call_byref,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
@@ -1012,7 +1002,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::mimic_call(
                             context,
-                            context.runtime.system_mimic_call,
+                            context.runtime().system_mimic_call,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
                             arguments[2],
@@ -1035,7 +1025,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::mimic_call(
                             context,
-                            context.runtime.system_mimic_call_byref,
+                            context.runtime().system_mimic_call_byref,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
@@ -1058,7 +1048,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.far_call,
+                            context.runtime().far_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[2].into_int_value(),
@@ -1081,7 +1071,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.far_call_byref,
+                            context.runtime().far_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[1].into_int_value(),
@@ -1104,7 +1094,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_far_call,
+                            context.runtime().system_far_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[4].into_int_value(),
@@ -1129,7 +1119,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_far_call_byref,
+                            context.runtime().system_far_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[3].into_int_value(),
@@ -1154,7 +1144,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.static_call,
+                            context.runtime().static_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[2].into_int_value(),
@@ -1177,7 +1167,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.static_call_byref,
+                            context.runtime().static_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[1].into_int_value(),
@@ -1200,7 +1190,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_static_call,
+                            context.runtime().system_static_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[4].into_int_value(),
@@ -1225,7 +1215,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_static_call_byref,
+                            context.runtime().system_static_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[3].into_int_value(),
@@ -1250,7 +1240,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.delegate_call,
+                            context.runtime().delegate_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[2].into_int_value(),
@@ -1273,7 +1263,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::raw_far_call(
                             context,
-                            context.runtime.delegate_call_byref,
+                            context.runtime().delegate_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[1].into_int_value(),
@@ -1296,7 +1286,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_delegate_call,
+                            context.runtime().system_delegate_call,
                             arguments[0].into_int_value(),
                             arguments[1],
                             arguments[4].into_int_value(),
@@ -1321,7 +1311,7 @@ impl FunctionCall {
                         let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
                         compiler_llvm_context::contract::simulation::system_call(
                             context,
-                            context.runtime.system_delegate_call_byref,
+                            context.runtime().system_delegate_call_byref,
                             arguments[0].into_int_value(),
                             context.get_global(compiler_llvm_context::GLOBAL_ACTIVE_POINTER)?,
                             arguments[3].into_int_value(),

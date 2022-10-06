@@ -95,7 +95,7 @@ where
     }
 
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        context.evm_mut().stack = vec![];
+        context.evmla_mut().stack = vec![];
 
         self.function.into_llvm(context)?;
 

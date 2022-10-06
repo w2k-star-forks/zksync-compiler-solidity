@@ -201,7 +201,7 @@ where
             println!("Contract `{}` deploy EVM:\n\n{}", full_path, self);
         }
         let deploy_code_blocks = EtherealIR::get_blocks(
-            context.evm().version.to_owned(),
+            context.evmla().version.to_owned(),
             compiler_llvm_context::CodeType::Deploy,
             self.code
                 .as_deref()
@@ -228,14 +228,14 @@ where
             }
         };
         let runtime_code_blocks = EtherealIR::get_blocks(
-            context.evm().version.to_owned(),
+            context.evmla().version.to_owned(),
             compiler_llvm_context::CodeType::Runtime,
             runtime_code_instructions.as_slice(),
         )?;
 
         let mut blocks = deploy_code_blocks;
         blocks.extend(runtime_code_blocks);
-        let mut ethereal_ir = EtherealIR::new(context.evm().version.to_owned(), blocks)?;
+        let mut ethereal_ir = EtherealIR::new(context.evmla().version.to_owned(), blocks)?;
         if context.has_dump_flag(compiler_llvm_context::DumpFlag::EthIR) {
             println!("Contract `{}` Ethereal IR:\n\n{}", full_path, ethereal_ir);
         }

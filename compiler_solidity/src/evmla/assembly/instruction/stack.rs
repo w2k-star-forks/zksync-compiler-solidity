@@ -51,7 +51,7 @@ pub fn dup<'ctx, D>(
 where
     D: compiler_llvm_context::Dependency,
 {
-    let element = &context.evm().stack[height - offset - 1];
+    let element = &context.evmla().stack[height - offset - 1];
     let value = context.build_load(
         element.to_llvm().into_pointer_value(),
         format!("dup{}", offset).as_str(),
@@ -73,17 +73,17 @@ pub fn swap<'ctx, D>(
 where
     D: compiler_llvm_context::Dependency,
 {
-    let top_element = context.evm().stack[height - 1].to_owned();
+    let top_element = context.evmla().stack[height - 1].to_owned();
     let top_pointer = top_element.to_llvm().into_pointer_value();
     let top_value = context.build_load(top_pointer, format!("swap{}_top_value", offset).as_str());
 
-    let swap_element = context.evm().stack[height - offset - 1].to_owned();
+    let swap_element = context.evmla().stack[height - offset - 1].to_owned();
     let swap_pointer = swap_element.to_llvm().into_pointer_value();
     let swap_value =
         context.build_load(swap_pointer, format!("swap{}_swap_value", offset).as_str());
 
-    context.evm_mut().stack[height - 1].original = swap_element.original.to_owned();
-    context.evm_mut().stack[height - offset - 1].original = top_element.original.to_owned();
+    context.evmla_mut().stack[height - 1].original = swap_element.original.to_owned();
+    context.evmla_mut().stack[height - offset - 1].original = top_element.original.to_owned();
 
     context.build_store(top_pointer, swap_value);
     context.build_store(swap_pointer, top_value);

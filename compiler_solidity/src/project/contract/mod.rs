@@ -81,26 +81,19 @@ impl Contract {
             dump_flags.contains(&DumpFlag::LLVM),
             dump_flags.contains(&DumpFlag::Assembly),
         );
-        let mut context = match self.source {
-            Source::Yul(_) => compiler_llvm_context::Context::new(
-                &llvm,
-                self.path.as_str(),
-                optimizer,
-                Some(project.clone()),
-                dump_flags,
-            ),
-            Source::EVM(_) => {
-                let version = project.read().expect("Sync").version.to_owned();
-                compiler_llvm_context::Context::new_evm(
-                    &llvm,
-                    self.path.as_str(),
-                    optimizer,
-                    Some(project.clone()),
-                    dump_flags,
-                    compiler_llvm_context::ContextEVMData::new(version),
-                )
-            }
-        };
+        let mut context = compiler_llvm_context::Context::new(
+            &llvm,
+            self.path.as_str(),
+            optimizer,
+            Some(project.clone()),
+            dump_flags,
+        );
+        context.set_solidity_data(compiler_llvm_context::ContextSolidityData::default());
+        if let Source::EVM(_) = self.source {
+            let version = project.read().expect("Sync").version.to_owned();
+            let evmla_data = compiler_llvm_context::ContextEVMLAData::new(version);
+            context.set_evmla_data(evmla_data);
+        }
 
         let factory_dependencies = self.drain_factory_dependencies();
 

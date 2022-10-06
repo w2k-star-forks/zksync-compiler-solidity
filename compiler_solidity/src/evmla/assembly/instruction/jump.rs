@@ -17,10 +17,11 @@ where
     let block_key = compiler_llvm_context::FunctionBlockKey::new(code_type, destination);
 
     let block = context
-        .function()
-        .evm()
+        .current_function()
+        .borrow()
+        .evmla()
         .find_block(&block_key, &stack_hash)?;
-    context.build_unconditional_branch(block.inner);
+    context.build_unconditional_branch(block.inner());
 
     Ok(None)
 }
@@ -40,7 +41,7 @@ where
     let code_type = context.code_type();
     let block_key = compiler_llvm_context::FunctionBlockKey::new(code_type, destination);
 
-    let condition_pointer = context.evm().stack[stack_height]
+    let condition_pointer = context.evmla().stack[stack_height]
         .to_llvm()
         .into_pointer_value();
     let condition = context.build_load(
@@ -55,13 +56,14 @@ where
     );
 
     let then_block = context
-        .function()
-        .evm()
+        .current_function()
+        .borrow()
+        .evmla()
         .find_block(&block_key, &stack_hash)?;
     let join_block =
         context.append_basic_block(format!("conditional_{}_join_block", block_key).as_str());
 
-    context.build_conditional_branch(condition, then_block.inner, join_block);
+    context.build_conditional_branch(condition, then_block.inner(), join_block);
 
     context.set_basic_block(join_block);
 

@@ -785,50 +785,52 @@ where
     D: compiler_llvm_context::Dependency,
 {
     fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        context.add_function_evm(
+        let function = context.add_function(
             EtherealIR::DEFAULT_ENTRY_FUNCTION_NAME,
-            context.void_type().fn_type(
-                &[context
+            context.function_type(
+                0,
+                vec![context
                     .integer_type(compiler_common::BITLENGTH_BOOLEAN as usize)
-                    .as_basic_type_enum()
-                    .into()],
-                false,
+                    .as_basic_type_enum()],
             ),
+            0,
             Some(inkwell::module::Linkage::Private),
-            compiler_llvm_context::FunctionEVMData::new(self.stack_size),
-        );
+        )?;
+        function
+            .borrow_mut()
+            .set_evmla_data(compiler_llvm_context::FunctionEVMLAData::new(
+                self.stack_size,
+            ));
 
         Ok(())
     }
 
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let function = context
-            .functions
-            .get(EtherealIR::DEFAULT_ENTRY_FUNCTION_NAME)
-            .cloned()
-            .expect("Always exists");
-        let is_deploy_code_flag = function
-            .value
+        context.set_current_function(EtherealIR::DEFAULT_ENTRY_FUNCTION_NAME)?;
+        let is_deploy_code_flag = context
+            .current_function()
+            .borrow()
+            .inner()
             .get_first_param()
             .expect("Always exists")
             .into_int_value();
-        context.set_function(function);
 
         for (key, blocks) in self.blocks.iter() {
             for (index, block) in blocks.iter().enumerate() {
                 let inner = context.append_basic_block(format!("block_{}/{}", key, index).as_str());
-                let block = compiler_llvm_context::FunctionBlock::new_evm(
-                    inner,
-                    compiler_llvm_context::FunctionBlockEVMData::new(block.initial_stack.hash()),
-                );
+                let evmla_data =
+                    compiler_llvm_context::FunctionBlockEVMLAData::new(block.initial_stack.hash());
+                let mut block = compiler_llvm_context::FunctionBlock::new(inner);
+                block.set_evmla_data(evmla_data);
                 context
-                    .function_mut()
-                    .evm_mut()
+                    .current_function()
+                    .borrow_mut()
+                    .evmla_mut()
                     .insert_block(key.to_owned(), block);
             }
         }
 
-        context.set_basic_block(context.function().entry_block);
+        context.set_basic_block(context.current_function().borrow().entry_block());
         let mut stack_variables = Vec::with_capacity(self.stack_size);
         for stack_index in 0..self.stack_size {
             let pointer = context.build_alloca(
@@ -839,16 +841,16 @@ where
                 pointer.as_basic_value_enum(),
             ));
         }
-        context.evm_mut().stack = stack_variables;
+        context.evmla_mut().stack = stack_variables;
 
-        let deploy_code_block = context.function().evm().find_block(
+        let deploy_code_block = context.current_function().borrow().evmla().find_block(
             &compiler_llvm_context::FunctionBlockKey::new(
                 compiler_llvm_context::CodeType::Deploy,
                 num::BigUint::zero(),
             ),
             &Stack::default().hash(),
         )?;
-        let runtime_code_block = context.function().evm().find_block(
+        let runtime_code_block = context.current_function().borrow().evmla().find_block(
             &compiler_llvm_context::FunctionBlockKey::new(
                 compiler_llvm_context::CodeType::Runtime,
                 num::BigUint::zero(),
@@ -857,20 +859,21 @@ where
         )?;
         context.build_conditional_branch(
             is_deploy_code_flag,
-            deploy_code_block.inner,
-            runtime_code_block.inner,
+            deploy_code_block.inner(),
+            runtime_code_block.inner(),
         );
 
         for (key, blocks) in self.blocks.into_iter() {
             for (llvm_block, ir_block) in context
-                .function()
-                .evm()
+                .current_function()
+                .borrow()
+                .evmla()
                 .blocks
                 .get(&key)
                 .cloned()
                 .ok_or_else(|| anyhow::anyhow!("Undeclared function block {}", key))?
                 .into_iter()
-                .map(|block| block.inner)
+                .map(|block| block.inner())
                 .zip(blocks)
             {
                 context.set_basic_block(llvm_block);
@@ -878,7 +881,7 @@ where
             }
         }
 
-        context.set_basic_block(context.function().return_block);
+        context.set_basic_block(context.current_function().borrow().return_block());
         context.build_return(None);
 
         Ok(())

@@ -94,18 +94,19 @@ where
             let r#type = identifier.r#type.unwrap_or_default().into_llvm(context);
             let pointer = context.build_alloca(r#type, identifier.inner.as_str());
             context
-                .function_mut()
-                .stack
-                .insert(identifier.inner.clone(), pointer);
+                .current_function()
+                .borrow_mut()
+                .insert_stack_pointer(identifier.inner.clone(), pointer);
 
             let value = if let Some(expression) = self.expression {
                 match expression.into_llvm(context)? {
                     Some(mut value) => {
                         if let Some(constant) = value.constant.take() {
                             context
-                                .function_mut()
-                                .constants
-                                .insert(identifier.inner, constant);
+                                .current_function()
+                                .borrow_mut()
+                                .yul_mut()
+                                .insert_constant(identifier.inner, constant);
                         }
 
                         value.to_llvm()
@@ -144,17 +145,17 @@ where
                 format!("binding_{}_pointer", index).as_str(),
             );
             context
-                .function_mut()
-                .stack
-                .insert(binding.inner.to_owned(), pointer);
+                .current_function()
+                .borrow_mut()
+                .insert_stack_pointer(binding.inner.to_owned(), pointer);
         }
 
         match self.expression.take() {
             Some(expression) => {
                 let location = expression.location();
 
-                if let Some(value) = expression.into_llvm(context)? {
-                    if value
+                if let Some(argument) = expression.into_llvm(context)? {
+                    if argument
                         .value
                         .get_type()
                         .ptr_type(compiler_llvm_context::AddressSpace::Stack.into())
@@ -167,7 +168,7 @@ where
                         );
                     }
 
-                    context.build_store(pointer, value.to_llvm());
+                    context.build_store(pointer, argument.to_llvm());
 
                     for (index, binding) in self.bindings.into_iter().enumerate() {
                         let pointer = unsafe {
@@ -186,10 +187,9 @@ where
                         let value = context
                             .build_load(pointer, format!("binding_{}_value", index).as_str());
                         let pointer = context
-                            .function_mut()
-                            .stack
-                            .get(binding.inner.as_str())
-                            .copied()
+                            .current_function()
+                            .borrow_mut()
+                            .get_stack_pointer(binding.inner.as_str())
                             .ok_or_else(|| {
                                 anyhow::anyhow!(
                                     "{} Assignment to an undeclared variable `{}`",

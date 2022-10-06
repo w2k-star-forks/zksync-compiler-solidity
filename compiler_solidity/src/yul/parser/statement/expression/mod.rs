@@ -101,10 +101,9 @@ impl Expression {
             Self::Literal(literal) => Ok(Some(literal.into_llvm(context))),
             Self::Identifier(identifier) => {
                 let pointer = context
-                    .function()
-                    .stack
-                    .get(identifier.inner.as_str())
-                    .copied()
+                    .current_function()
+                    .borrow()
+                    .get_stack_pointer(identifier.inner.as_str())
                     .ok_or_else(|| {
                         anyhow::anyhow!(
                             "{} Undeclared variable `{}`",
@@ -114,10 +113,10 @@ impl Expression {
                     })?;
 
                 let constant = context
-                    .function()
-                    .constants
-                    .get(identifier.inner.as_str())
-                    .cloned();
+                    .current_function()
+                    .borrow()
+                    .yul()
+                    .get_constant(identifier.inner.as_str());
 
                 let value = context.build_load(pointer, identifier.inner.as_str());
 

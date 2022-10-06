@@ -32,10 +32,10 @@ where
 {
     fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         let target = context
-            .functions
-            .get(EtherealIR::DEFAULT_ENTRY_FUNCTION_NAME)
+            .get_function(EtherealIR::DEFAULT_ENTRY_FUNCTION_NAME)
             .expect("Always exists")
-            .value;
+            .borrow()
+            .inner();
         let is_deploy_code = match self.code_type {
             compiler_llvm_context::CodeType::Deploy => context
                 .integer_type(compiler_common::BITLENGTH_BOOLEAN)

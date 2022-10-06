@@ -176,6 +176,20 @@ where
         )
         .declare(context)?;
 
+        for name in [
+            compiler_llvm_context::Runtime::FUNCTION_DEPLOY_CODE,
+            compiler_llvm_context::Runtime::FUNCTION_RUNTIME_CODE,
+            compiler_llvm_context::Runtime::FUNCTION_ENTRY,
+        ]
+        .into_iter()
+        {
+            context
+                .get_function(name)
+                .expect("Always exists")
+                .borrow_mut()
+                .set_yul_data(compiler_llvm_context::FunctionYulData::default());
+        }
+
         entry.into_llvm(context)?;
 
         Ok(())
