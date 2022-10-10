@@ -1529,6 +1529,26 @@ impl FunctionCall {
                         )
                         .map(Some)
                     }
+                    identifier @ "mul_high" => {
+                        const ARGUMENTS_COUNT: usize = 2;
+                        if input_size != ARGUMENTS_COUNT {
+                            anyhow::bail!(
+                                "{} Internal function `{}` expected {} arguments, found {}",
+                                location,
+                                identifier,
+                                ARGUMENTS_COUNT,
+                                input_size
+                            );
+                        }
+
+                        let arguments = self.pop_arguments_llvm::<D, ARGUMENTS_COUNT>(context)?;
+                        compiler_llvm_context::contract::simulation::multiplication_512(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                        )
+                        .map(Some)
+                    }
                     identifier @ "throw" => {
                         const ARGUMENTS_COUNT: usize = 0;
                         if input_size != ARGUMENTS_COUNT {

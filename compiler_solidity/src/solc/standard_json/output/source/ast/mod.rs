@@ -199,15 +199,12 @@ impl AST {
     pub fn get_warnings(&self) -> anyhow::Result<Vec<SolcStandardJsonOutputError>> {
         let mut warnings = Vec::new();
         if let Some(warning) = self.check_ecrecover() {
-            println!("{}", warning.formatted_message);
             warnings.push(warning);
         }
         if let Some(warning) = self.check_send_zero_ether() {
-            println!("{}", warning.formatted_message);
             warnings.push(warning);
         }
         if let Some(warning) = self.check_extcodesize() {
-            println!("{}", warning.formatted_message);
             warnings.push(warning);
         }
 
