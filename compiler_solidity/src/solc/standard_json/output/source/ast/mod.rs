@@ -24,6 +24,8 @@ pub struct AST {
     pub name: Option<String>,
     /// The node location in the source code.
     pub src: Option<String>,
+    /// The member name.
+    pub member_name: Option<String>,
     /// The function name.
     pub function_name: Option<Box<Self>>,
 
@@ -125,6 +127,47 @@ impl AST {
             self.src.as_deref(),
         ))
     }
+
+    ///
+    /// Checks the AST node for `<address payable>.send(0)`.
+    ///
+    pub fn check_send_zero_ether(&self) -> Option<SolcStandardJsonOutputError> {
+        if let Some(node_type) = self.node_type.as_ref() {
+            if node_type.as_str() != "FunctionCall" {
+                return None;
+            }
+        }
+
+        let expression = self.expression.as_ref()?.as_node()?;
+        if let Some(node_type) = expression.node_type.as_ref() {
+            if node_type.as_str() != "MemberAccess" {
+                return None;
+            }
+        }
+        if let Some(member_name) = expression.member_name.as_ref() {
+            if member_name.as_str() != "send" {
+                return None;
+            }
+        }
+
+        let first_argument = self
+            .arguments
+            .as_ref()
+            .and_then(|arguments| arguments.first())?
+            .as_node()?;
+        if let Expression::Other(serde_json::Value::String(ref literal)) =
+            &**first_argument.value.as_ref()?
+        {
+            if literal != "0" {
+                return None;
+            }
+        }
+
+        Some(SolcStandardJsonOutputError::warning_send_zero_ether(
+            self.src.as_deref(),
+        ))
+    }
+
     ///
     /// Checks the AST node for `extcodesize`.
     ///
@@ -156,9 +199,15 @@ impl AST {
     pub fn get_warnings(&self) -> anyhow::Result<Vec<SolcStandardJsonOutputError>> {
         let mut warnings = Vec::new();
         if let Some(warning) = self.check_ecrecover() {
+            println!("{}", warning.formatted_message);
+            warnings.push(warning);
+        }
+        if let Some(warning) = self.check_send_zero_ether() {
+            println!("{}", warning.formatted_message);
             warnings.push(warning);
         }
         if let Some(warning) = self.check_extcodesize() {
+            println!("{}", warning.formatted_message);
             warnings.push(warning);
         }
 

@@ -39,14 +39,37 @@ impl Error {
     ///
     pub fn warning_ecrecover(src: Option<&str>) -> Self {
         let message = r#"
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ Warning: It seems like you are using ecrecover to validate signature of a user account. │
-│ zkSync 2.0 will come with native account abstraction support. It is highly recommended  │
-│ NOT to rely on the fact that the account has ECDSA private key attached to it, since    │
-│ they may be ruled by a multisig and use other signature scheme. You can read more about │
-│ how you can get ready for the future AA launch here:                                    │
-│ https://v2-docs.zksync.io/dev/zksync-v2/aa.html#important-account-abstraction-support   │
-└─────────────────────────────────────────────────────────────────────────────────────────┘"#
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Warning: It looks like you are using 'ecrecover' to validate a signature of a user account.      │
+│ zkSync 2.0 will come with the native account abstraction support. It is highly recommended NOT   │
+│ to rely on the fact that the account has an ECDSA private key attached to it, since they may be  │
+│ ruled by a multisig and use another signature scheme. You can read more about how you can get    │
+│ ready for the future launch of AA here:                                                          │
+│ https://v2-docs.zksync.io/dev/zksync-v2/aa.html#important-account-abstraction-support            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘"#
+            .to_owned();
+
+        Self {
+            component: "general".to_owned(),
+            error_code: None,
+            formatted_message: message.clone(),
+            message,
+            severity: "warning".to_owned(),
+            source_location: src.map(SourceLocation::from_str).and_then(Result::ok),
+            r#type: "Warning".to_owned(),
+        }
+    }
+
+    ///
+    /// Returns the `<address payable>.send(0)` usage warning.
+    ///
+    pub fn warning_send_zero_ether(src: Option<&str>) -> Self {
+        let message = r#"
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Warning: It looks like you are using '<address payable>.send(0)'.                                │
+│ Such calls may fail depending or the pubdata costs, or if the receiver is a smart contract or    │
+│ account abstraction.                                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘"#
             .to_owned();
 
         Self {
@@ -65,15 +88,15 @@ impl Error {
     ///
     pub fn warning_extcodesize(src: Option<&str>) -> Self {
         let message = r#"
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ Warning: It seems like your code or one of its dependencies uses extcodesize. This      │
-│ opcode is most often used for the following:                                            │
-│     - to detect whether an address belongs to smart contracts                           │
-│     - to detect whether the deploy code execution has ended                             │
-│ zkSync 2.0 will support account abstraction by default (so every account will be a      │
-│ smart contract, even private-key controlled EOAs). So none of the use-cases above will  │
-│ work. Please do your best to avoid differentiating between contracts and non-contracts. │
-└─────────────────────────────────────────────────────────────────────────────────────────┘"#
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Warning: It looks like your code or one of its dependencies uses the 'extcodesize' instruction.  │
+│ It is usually used in the following cases:                                                       │
+│     1. To detect whether an address belongs to a smart contract.                                 │
+│     2. To detect whether the deploy code execution has finished.                                 │
+│ zkSync 2.0 will support the account abstraction by default (so every account will be a smart     │
+│ contract, even private-key controlled EOAs). So none of the use-cases above will work.           │
+│ Please do your best to avoid differentiating between contracts and non-contracts.                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘"#
             .to_owned();
 
         Self {
