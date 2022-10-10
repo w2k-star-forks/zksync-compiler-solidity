@@ -101,154 +101,151 @@ jobs:
         run: |
           rm -rf ~/.gitconfig
 
-  # build_macos_amd64:
-  #   runs-on: [macos-12]
-  #   env:
-  #     CARGO_NET_GIT_FETCH_WITH_CLI: true
-  #   steps:
-  #     - name: Checkout source
-  #       uses: actions/checkout@v3
-  #       with:
-  #          fetch-depth: 0
-  #         token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
+  build_macos_amd64:
+    runs-on: [macos-12]
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+           fetch-depth: 0
+           token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
 
-  #     - name: Prepare environment
-  #       shell: zsh {0}
-  #       run: |
-  #         brew install cmake ninja
-  #         git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
-  #         git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
+      - name: Prepare environment
+        shell: zsh {0}
+        run: |
+          brew install cmake ninja
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
 
-  #     - name: Build LLVM framework
-  #       if: github.event_name != 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         cargo run --release --bin llvm-builder
+      - name: Build LLVM framework
+        if: github.event_name != 'workflow_dispatch'
+        shell: zsh {0}
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          cargo run --release --bin llvm-builder
 
-  #     - name: Build LLVM framework (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       working-directory: llvm-builder
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         git checkout --progress --force ${{ github.event.inputs.llvm_builder_ref }}
-  #         cargo run --bin llvm-builder -- tag ${{ github.event.inputs.llvm_tag }}
+      - name: Build LLVM framework (manual)
+        if: github.event_name == 'workflow_dispatch'
+        shell: zsh {0}
+        working-directory: llvm-builder
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          git checkout --progress --force ${{ github.event.inputs.llvm_builder_ref }}
+          cargo run --bin llvm-builder -- tag ${{ github.event.inputs.llvm_tag }}
 
-  #     - name: Checkout different compiler ref (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       run: |
-  #         git checkout --progress --force refs/tags/${{ github.event.inputs.compiler_tag }}
+      - name: Checkout different compiler ref (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git checkout --progress --force refs/tags/${{ github.event.inputs.compiler_tag }}
 
-  #     - name: Build compiler
-  #       shell: zsh {0}
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         cargo build --release
+      - name: Build compiler
+        shell: zsh {0}
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          cargo build --release
 
-  #     - name: Prepare binary file name
-  #       if: github.event_name != 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       run: |
-  #         mkdir -p ./releases/macosx-amd64
-  #         mv ./target/release/zksolc ./releases/macosx-amd64/zksolc-macosx-amd64-${{ github.ref_name }}
+      - name: Prepare binary file name
+        if: github.event_name != 'workflow_dispatch'
+        shell: zsh {0}
+        run: |
+          mkdir -p ./releases/macosx-amd64
+          mv ./target/release/zksolc ./releases/macosx-amd64/zksolc-macosx-amd64-${{ github.ref_name }}
 
-  #     - name: Prepare binary file name (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       run: |
-  #         mkdir -p ./releases/macosx-arm64
-  #         mv ./target/release/zksolc ./releases/macosx-arm64/zksolc-macosx-arm64-${{ github.event.inputs.compiler_tag }}
+      - name: Prepare binary file name (manual)
+        if: github.event_name == 'workflow_dispatch'
+        shell: zsh {0}
+        run: |
+          mkdir -p ./releases/macosx-arm64
+          mv ./target/release/zksolc ./releases/macosx-arm64/zksolc-macosx-arm64-${{ github.event.inputs.compiler_tag }}
 
-  #     - uses: actions/upload-artifact@v3
-  #       with:
-  #         name: release_macos_amd
-  #         path: releases
+      - uses: actions/upload-artifact@v3
+        with:
+          name: release_macos_amd
+          path: releases
 
-  # build_linux:
-  #   runs-on: [self-hosted, ci-runner]
-  #   container:
-  #     image: matterlabs/llvm_runner:latest
-  #     credentials:
-  #       username: ${{ secrets.DOCKERHUB_USER }}
-  #       password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       target:
-  #         - musl
-  #   env:
-  #     CARGO_NET_GIT_FETCH_WITH_CLI: true
-  #   steps:
-  #     - name: Checkout source
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
-  #         token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
-  #
-  #     - name: Prepare environment
-  #       run: |
-  #         apt update && apt install -y musl-tools
-  #         git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
-  #         git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
-  #         rustup target add x86_64-unknown-linux-${{ matrix.target }}
+  build_linux:
+    runs-on: [self-hosted, ci-runner]
+    container:
+      image: matterlabs/llvm_runner:latest
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - musl
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
 
-  #     - name: Build LLVM framework
-  #       if: github.event_name != 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         cargo run --target x86_64-unknown-linux-${{ matrix.target }} --bin llvm-builder
+      - name: Prepare environment
+        run: |
+          apt update && apt install -y musl-tools
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
+          rustup target add x86_64-unknown-linux-${{ matrix.target }}
 
-  #     - name: Build LLVM framework (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       shell: zsh {0}
-  #       working-directory: llvm-builder
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         git checkout --progress --force ${{ github.event.inputs.llvm_builder_ref }}
-  #         cargo run --target x86_64-unknown-linux-${{ matrix.target }} --bin llvm-builder -- --tag ${{ github.event.inputs.llvm_tag }}
+      - name: Build LLVM framework
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          cargo run --target x86_64-unknown-linux-${{ matrix.target }} --bin llvm-builder
 
-  #     - name: Checkout different compiler ref (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       run: |
-  #         git checkout --progress --force refs/tags/${{ github.event.inputs.compiler_tag }}
+      - name: Build LLVM framework (manual)
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: llvm-builder
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          git checkout --progress --force ${{ github.event.inputs.llvm_builder_ref }}
+          cargo run --target x86_64-unknown-linux-${{ matrix.target }} --bin llvm-builder -- --tag ${{ github.event.inputs.llvm_tag }}
 
-  #     - name: Build compiler
-  #       shell: zsh {0}
-  #       env:
-  #         CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  #       run: |
-  #         cargo build --release --target x86_64-unknown-linux-${{ matrix.target }}
+      - name: Checkout different compiler ref (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git checkout --progress --force refs/tags/${{ github.event.inputs.compiler_tag }}
 
-  #     - name: Prepare binary file name
-  #       if: github.event_name != 'workflow_dispatch'
-  #       run: |
-  #         mkdir -p releases/linux-amd64
-  #         mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zksolc releases/linux-amd64/zksolc-linux-amd64-${{ matrix.target }}-${{ github.ref_name }}
+      - name: Build compiler
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          cargo build --release --target x86_64-unknown-linux-${{ matrix.target }}
 
-  #     - name: Prepare binary file name (manual)
-  #       if: github.event_name == 'workflow_dispatch'
-  #       run: |
-  #         mkdir -p releases/linux-amd64
-  #         mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zksolc releases/linux-amd64/zksolc-linux-amd64-${{ matrix.target }}-${{ github.event.inputs.compiler_tag }}
+      - name: Prepare binary file name
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          mkdir -p releases/linux-amd64
+          mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zksolc releases/linux-amd64/zksolc-linux-amd64-${{ matrix.target }}-${{ github.ref_name }}
 
-  #     - uses: actions/upload-artifact@v3
-  #       with:
-  #         name: release_linux
-  #         path: releases
+      - name: Prepare binary file name (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          mkdir -p releases/linux-amd64
+          mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zksolc releases/linux-amd64/zksolc-linux-amd64-${{ matrix.target }}-${{ github.event.inputs.compiler_tag }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: release_linux
+          path: releases
 
   prepare_release:
     runs-on: ubuntu-latest
     needs:
       - build_macos_arm64
-      # - build_macos_amd64
-      # - build_linux
+      - build_macos_amd64
+      - build_linux
     steps:
       - name: Checkout source
         if: github.event_name != 'workflow_dispatch'
@@ -263,17 +260,17 @@ jobs:
           name: release_macos_arm
           path: releases
 
-      # - name: Download MacOS amd64 artifact
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: release_macos_amd
-      #     path: releases
+      - name: Download MacOS amd64 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release_macos_amd
+          path: releases
 
-      # - name: Download Linux artifacts
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: release_linux
-      #     path: releases
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release_linux
+          path: releases
 
       - name: Get version from tag
         if: github.event_name != 'workflow_dispatch'
