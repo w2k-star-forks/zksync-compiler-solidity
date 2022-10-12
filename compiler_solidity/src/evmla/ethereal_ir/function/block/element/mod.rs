@@ -742,7 +742,15 @@ where
                     Some(source) if source.chars().all(|char| char.is_ascii_hexdigit()) => {
                         codecopy::static_data(context, arguments[0].into_int_value(), source)
                     }
-                    Some(_source) => Ok(None),
+                    Some(_source) => {
+                        if let compiler_llvm_context::CodeType::Runtime = context.code_type() {
+                            anyhow::bail!(
+                                "The `CODECOPY` instruction is not supported in the runtime code"
+                            );
+                        }
+                        Ok(None)
+                    }
+
                     None => compiler_llvm_context::calldata::copy(
                         context,
                         arguments[0].into_int_value(),

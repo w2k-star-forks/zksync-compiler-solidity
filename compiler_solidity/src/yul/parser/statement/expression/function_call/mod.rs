@@ -535,6 +535,13 @@ impl FunctionCall {
             }
             Name::CodeSize => compiler_llvm_context::calldata::size(context),
             Name::CodeCopy => {
+                if let compiler_llvm_context::CodeType::Runtime = context.code_type() {
+                    anyhow::bail!(
+                        "{} The `CODECOPY` instruction is not supported in the runtime code",
+                        location,
+                    );
+                }
+
                 let arguments = self.pop_arguments_llvm::<D, 3>(context)?;
                 compiler_llvm_context::calldata::copy(
                     context,

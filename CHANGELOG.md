@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The instruction `CODECOPY` now produce a compiler error in the runtime code
+
+## [1.2.0] - 2022-10-10
+
 ### Added
 
 - Many improvements for the memory security and EVM-compatibility
